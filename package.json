@@ -1,0 +1,28 @@
+{
+  "name": "hospital-management",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon src/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AnujAcharjee/Hospital-management.git"
+  },
+  "keywords": [
+    "javascript",
+    "backend"
+  ],
+  "author": "Anuj Acharjee",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/AnujAcharjee/Hospital-management/issues"
+  },
+  "homepage": "https://github.com/AnujAcharjee/Hospital-management#readme",
+  "description": "",
+  "devDependencies": {
+    "nodemon": "^3.1.4",
+    "prettier": "^3.3.3"
+  }
+}
