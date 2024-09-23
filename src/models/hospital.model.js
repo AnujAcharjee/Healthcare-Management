@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import { Patient } from "./patient";
-import { Inventory } from "./inventory";
+import { Inventory } from "./inventory.model";
 
 const hospitalSchema = new mongoose.Schema(
   {
