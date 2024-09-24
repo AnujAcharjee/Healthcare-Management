@@ -17,10 +17,6 @@ const patientSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    age: {
-      type: Number,
-      required: true,
-    },
     displayPicture: {
       type: String,
     },
@@ -28,6 +24,16 @@ const patientSchema = new mongoose.Schema(
       type: String,
       required: [true, "Password is required"],
     },
+    age: {
+      type: Number,
+      required: true,
+    },
+    gender: {
+      type: String,
+      enum: ["male", "female", "other"],
+      required: true,
+    },
+    medicalReports: [],
     refreshToken: {
       type: String,
     },

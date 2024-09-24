@@ -2,14 +2,17 @@ import asyncHandler from "../utils/asyncHandler.js";
 import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import { Patient } from "../models/patient.model.js";
-import { uploadCloudinary } from "../utils/coludinary.js";
+import { uploadCloudinary } from "../utils/cloudinary.js";
 
 const registerUser = asyncHandler(async (req, res) => {
-  const { userName, email, phoneNumber, password } = req.body;
+  // console.log("Request body:", req.body);
+  // console.log("Uploaded files:", req.files);
+
+  const { userName, email, phoneNumber, password, age, gender } = req.body;
 
   if (
-    [userName, email, password, phoneNumber].some(
-      (element) => element?.trim() === ""
+    [userName, email, password, phoneNumber, age, gender].some(
+      (field) => !field || field?.trim() === ""
     )
   ) {
     throw new ApiError(400, "All fields are required");
@@ -18,19 +21,26 @@ const registerUser = asyncHandler(async (req, res) => {
   const existingUser = await Patient.findOne({
     $or: [{ email }, { phoneNumber }],
   });
+
   if (existingUser) {
-    throw new ApiError(409, "email or Phone number already exists");
+    throw new ApiError(409, "Email or Phone number already exists");
   }
 
   const displayPictureLocalPath =
-    req.file?.displayPicture[0].displayPictureLocalPath;
-  if (!displayPictureLocalPath) {
-    throw new ApiError(400, "displayPicture file is required");
-  }
+    req.files?.displayPicture && req.files.displayPicture.length > 0
+      ? req.files.displayPicture[0].path
+      : null;
 
-  const displayPicture = await uploadCloudinary(displayPictureLocalPath);
-  if (!displayPicture) {
-    throw new ApiError(400, "displayPicture file is required");
+  const displayPicture = null;
+  if (displayPictureLocalPath) {
+    const displayPicture = await uploadCloudinary(displayPictureLocalPath);
+    // console.log("Cloudinary upload result:", displayPicture);
+
+    if (!displayPicture) {
+      throw new ApiError(500, "Failed to upload display picture in Cloudinary");
+    }
+  } else {
+    console.warn("No display picture provided");
   }
 
   const user = await Patient.create({
@@ -38,7 +48,9 @@ const registerUser = asyncHandler(async (req, res) => {
     email,
     phoneNumber,
     password,
-    displayPicture: displayPicture.url,
+    age,
+    gender,
+    displayPicture: displayPicture?.url || "",
   });
 
   const createdUser = await Patient.findById(user._id).select(

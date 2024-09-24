@@ -6,7 +6,6 @@ const router = Router();
 
 router.route("/register").post(
   upload.fields([{ name: "displayPicture", maxCount: 1 }]),
-
   registerUser
 );
 
