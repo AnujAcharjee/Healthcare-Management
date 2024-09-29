@@ -98,7 +98,7 @@ const loginUser = asyncHandler(async (req, res) => {
     throw new ApiError(404, "User does not exist");
   }
 
-  const isValidPassword = await Patient.isPasswordCorrect(password);
+  const isValidPassword = await user.isPasswordCorrect(password);
 
   if (!isValidPassword) {
     throw new ApiError(401, "Invalid user credentials");
@@ -107,7 +107,7 @@ const loginUser = asyncHandler(async (req, res) => {
   const { accessToken, refreshToken } =
     await generateAccessTokenAndRefreshToken(user._id);
 
-  const loggedInUser = await User.findById(user._id).select(
+  const loggedInUser = await Patient.findById(user._id).select(
     "-password -refreshToken"
   );
 
@@ -133,4 +133,28 @@ const loginUser = asyncHandler(async (req, res) => {
     );
 });
 
-export { registerUser, loginUser };
+const logoutUser = asyncHandler(async (req, res) => {
+  if (!req.user) {
+    throw new ApiError(401, "User not authenticated");
+  }
+  
+  await Patient.findByIdAndUpdate(req.user._id, {
+    $unset: {
+      refreshToken: 1 // this removes the field from document
+    },
+  });
+
+  const options = {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'None',
+  };
+
+  return res
+    .status(200)
+    .clearCookie("accessToken", options)
+    .clearCookie("refreshToken", options)
+    .json(new ApiResponse(200, {}, "User logged Out"));
+});
+
+export { registerUser, loginUser, logoutUser };
