@@ -4,6 +4,12 @@ import ApiResponse from "../utils/ApiResponse.js";
 import { Patient } from "../models/patient.model.js";
 import { uploadCloudinary } from "../utils/cloudinary.js";
 
+// cookies options
+const options = {
+  httpOnly: true,
+  secure: true,
+};
+
 const generateAccessTokenAndRefreshToken = async (userId) => {
   try {
     const user = await Patient.findById(userId);
@@ -111,11 +117,6 @@ const loginUser = asyncHandler(async (req, res) => {
     "-password -refreshToken"
   );
 
-  const options = {
-    httpOnly: true,
-    secure: true,
-  };
-
   return res
     .status(200)
     .cookie("accessToken", accessToken, options)
@@ -144,12 +145,6 @@ const logoutUser = asyncHandler(async (req, res) => {
     },
   });
 
-  const options = {
-    httpOnly: true,
-    secure: true,
-    sameSite: "None",
-  };
-
   return res
     .status(200)
     .clearCookie("accessToken", options)
@@ -157,4 +152,24 @@ const logoutUser = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, {}, "User logged Out"));
 });
 
-export { registerUser, loginUser, logoutUser };
+const refreshAccessToken = asyncHandler(async (req, res) => {
+  if (!req.user) {
+    throw new ApiError(401, "User not authenticated");
+  }
+  const { accessToken, refreshToken } =
+    await generateAccessTokenAndRefreshToken(req.user._id);
+
+  return res
+    .status(200)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
+    .json(
+      new ApiResponse(
+        200,
+        { accessToken, refreshToken },
+        "Access token refreshed"
+      )
+    );
+});
+
+export { registerUser, loginUser, logoutUser, refreshAccessToken };

@@ -4,30 +4,65 @@ import jwt from "jsonwebtoken";
 import { Patient } from "../models/patient.model.js";
 
 export const verifyJwt = asyncHandler(async (req, _, next) => {
+  const accessToken =
+    req.cookies?.accessToken || // acquire access token from cookie
+    req.header("Authorization")?.replace(/bearer\s+/i, ""); //acquire access token from Header
+
+  // console.log(token);
+
+  if (!accessToken) {
+    throw new ApiError(401, "Unauthorized request");
+  }
+
+  // with Access Token present
   try {
-    const token =
-      req.cookies?.accessToken || // acquire access token from cookie
-      req.header("Authorization").replace(/bearer\s+/i, ""); //acquire access token from Header
+    const decodedAccessToken = jwt.verify(
+      accessToken,
+      process.env.ACCESS_TOKEN_SECRET
+    );
 
-    // console.log(token);
-
-    if (!token) {
-      throw new ApiError(401, "Unauthorized request");
-    }
-
-    const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-
-    const user = await Patient.findById(decodedToken?._id).select(
+    const user = await Patient.findById(decodedAccessToken?._id).select(
       "-password -refreshToken"
     );
 
     if (!user) {
-      throw new ApiError(401, "Invalid Access Token");
+      throw new ApiError(401, "Unauthorized user");
     }
 
     req.user = user;
-    next();
+    return next();
   } catch (error) {
-    throw new ApiError(401, error?.message || "Invalid access token");
+    if (error.name === "TokenExpiredError") {
+      console.log("Access token expired, checking refresh token...");
+    } else {
+      throw new ApiError(401, "Invalid Access Token");
+    }
+  }
+
+  // with Refresh token - Access Token expired
+  const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
+
+  if (!refreshToken) {
+    throw new ApiError(401, "No refresh token found");
+  }
+
+  try {
+    const decodedRefreshToken = jwt.verify(
+      refreshToken,
+      process.env.REFRESH_TOKEN_SECRET
+    );
+
+    const user = await Patient.findById(decodedRefreshToken?._id).select(
+      "-password -refreshToken"
+    );
+
+    if (!user) {
+      throw new ApiError(403, "Invalid refresh token");
+    }
+
+    req.user = user;
+    return next();
+  } catch (error) {
+    throw new ApiError(403, "Invalid or expired refresh token");
   }
 });
