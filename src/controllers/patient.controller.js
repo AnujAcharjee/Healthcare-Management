@@ -46,13 +46,13 @@ const registerUser = asyncHandler(async (req, res) => {
   }
 
   const displayPictureLocalPath =
-    req.files?.displayPicture && req.files.displayPicture.length > 0
+    req.files?.displayPicture && req.files?.displayPicture.length > 0
       ? req.files.displayPicture[0].path
       : null;
 
-  const displayPicture = null;
+  let displayPicture = null;
   if (displayPictureLocalPath) {
-    const displayPicture = await uploadCloudinary(displayPictureLocalPath);
+    displayPicture = await uploadCloudinary(displayPictureLocalPath);
     // console.log("Cloudinary upload result:", displayPicture);
 
     if (!displayPicture) {
@@ -137,17 +137,17 @@ const logoutUser = asyncHandler(async (req, res) => {
   if (!req.user) {
     throw new ApiError(401, "User not authenticated");
   }
-  
+
   await Patient.findByIdAndUpdate(req.user._id, {
     $unset: {
-      refreshToken: 1 // this removes the field from document
+      refreshToken: 1, // this removes the field from document
     },
   });
 
   const options = {
     httpOnly: true,
     secure: true,
-    sameSite: 'None',
+    sameSite: "None",
   };
 
   return res
