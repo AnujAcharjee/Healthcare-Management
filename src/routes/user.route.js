@@ -5,7 +5,9 @@ import {
   logoutUser,
   refreshAccessToken,
   changePassword,
+  changeUserDetails
 } from "../controllers/patient.controller.js";
+
 import { upload } from "../middlewares/multter.middleware.js";
 import { verifyJwt } from "../middlewares/auth.middleware.js";
 
@@ -21,5 +23,7 @@ router.route("/login").post(loginUser);
 router.route("/logout").post(verifyJwt, logoutUser);
 router.route("/refresh-token").post(verifyJwt, refreshAccessToken);
 router.route("/change-password").post(verifyJwt, changePassword);
+router.route("/change-user-details").post(verifyJwt, changeUserDetails);
+
 
 export default router;

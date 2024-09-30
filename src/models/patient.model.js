@@ -24,8 +24,8 @@ const patientSchema = new mongoose.Schema(
       type: String,
       required: [true, "Password is required"],
     },
-    age: {
-      type: Number,
+    DOB: {
+      type: Date,
       required: true,
     },
     gender: {

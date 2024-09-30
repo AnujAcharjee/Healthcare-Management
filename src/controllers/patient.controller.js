@@ -33,10 +33,10 @@ const registerUser = asyncHandler(async (req, res) => {
   // console.log("Request body:", req.body);
   // console.log("Uploaded files:", req.files);
 
-  const { userName, email, phoneNumber, password, age, gender } = req.body;
+  const { userName, email, phoneNumber, password, DOB, gender } = req.body;
 
   if (
-    [userName, email, password, phoneNumber, age, gender].some(
+    [userName, email, password, phoneNumber, DOB, gender].some(
       (field) => !field || field?.trim() === ""
     )
   ) {
@@ -73,7 +73,7 @@ const registerUser = asyncHandler(async (req, res) => {
     email,
     phoneNumber,
     password,
-    age,
+    DOB,
     gender,
     displayPicture: displayPicture?.url || "",
   });
@@ -135,10 +135,6 @@ const loginUser = asyncHandler(async (req, res) => {
 });
 
 const logoutUser = asyncHandler(async (req, res) => {
-  if (!req.user) {
-    throw new ApiError(401, "User not authenticated");
-  }
-
   await Patient.findByIdAndUpdate(req.user._id, {
     $unset: {
       refreshToken: 1, // this removes the field from document
@@ -153,9 +149,6 @@ const logoutUser = asyncHandler(async (req, res) => {
 });
 
 const refreshAccessToken = asyncHandler(async (req, res) => {
-  if (!req.user) {
-    throw new ApiError(401, "User not authenticated");
-  }
   const { accessToken, refreshToken } =
     await generateAccessTokenAndRefreshToken(req.user._id);
 
@@ -195,10 +188,53 @@ const changePassword = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, {}, "Password change successful"));
 });
 
+const changeUserDetails = asyncHandler(async (req, res) => {
+  const { userName, email, phoneNumber, DOB, gender, password } = req.body;
+
+  if (
+    [userName, email, phoneNumber, DOB, gender, password].some(
+      (field) => !field || field?.trim() === ""
+    )
+  ) {
+    throw new ApiError(400, "All fields are required");
+  }
+
+  const user = await Patient.findById(req.user?._id);
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  const isValidPassword = await user.isPasswordCorrect(password);
+  if (!isValidPassword) {
+    throw new ApiError(400, "Invalid password");
+  }
+
+  const updatedUser = await Patient.findByIdAndUpdate(
+    req.user?._id,
+    {
+      $set: {
+        userName,
+        email,
+        phoneNumber,
+        DOB,
+        gender,
+      },
+    },
+    { new: true }
+  ).select("-password -refreshToken");
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, updatedUser, "Account details updated successfully")
+    );
+});
+
 export {
   registerUser,
   loginUser,
   logoutUser,
   refreshAccessToken,
   changePassword,
+  changeUserDetails,
 };
