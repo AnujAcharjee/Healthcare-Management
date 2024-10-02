@@ -17,8 +17,13 @@ const patientSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    displayPicture: {
-      type: String,
+    avatar: {
+      url: {
+        type: String
+      },
+      public_id: {
+        type: String
+      }
     },
     password: {
       type: String,
@@ -49,6 +54,10 @@ patientSchema.pre("save", async function (next) {
 });
 
 patientSchema.methods.isPasswordCorrect = async function (password) {
+  if (!password) {
+    throw new Error('Password not provided');
+  }
+  
   return await bcrypt.compare(password, this.password);
 };
 

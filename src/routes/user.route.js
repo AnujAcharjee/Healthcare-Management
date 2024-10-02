@@ -5,17 +5,16 @@ import {
   logoutUser,
   refreshAccessToken,
   changePassword,
-  changeUserDetails
+  changeUserDetails,
+  changeUserDP,
 } from "../controllers/patient.controller.js";
 
-import { upload } from "../middlewares/multter.middleware.js";
+import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJwt } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
-router
-  .route("/register")
-  .post(upload.fields([{ name: "displayPicture", maxCount: 1 }]), registerUser);
+router.route("/register").post(upload.single("avatar"), registerUser);
 
 router.route("/login").post(loginUser);
 
@@ -24,6 +23,8 @@ router.route("/logout").post(verifyJwt, logoutUser);
 router.route("/refresh-token").post(verifyJwt, refreshAccessToken);
 router.route("/change-password").post(verifyJwt, changePassword);
 router.route("/change-user-details").post(verifyJwt, changeUserDetails);
-
+router
+  .route("/change-user-dp")
+  .post(verifyJwt, upload.single("avatar"), changeUserDP);
 
 export default router;

@@ -2,7 +2,7 @@ import asyncHandler from "../utils/asyncHandler.js";
 import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import { Patient } from "../models/patient.model.js";
-import { uploadCloudinary } from "../utils/cloudinary.js";
+import { uploadCloudinary, deleteCloudinary } from "../utils/cloudinary.js";
 
 // cookies options
 const options = {
@@ -43,25 +43,23 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new ApiError(400, "All fields are required");
   }
 
-  const existingUser = await Patient.findOne({
+  const isExistingUser = await Patient.findOne({
     $or: [{ email }, { phoneNumber }],
   });
 
-  if (existingUser) {
+  if (isExistingUser) {
     throw new ApiError(409, "Email or Phone number already exists");
   }
 
-  const displayPictureLocalPath =
-    req.files?.displayPicture && req.files?.displayPicture.length > 0
-      ? req.files.displayPicture[0].path
-      : null;
+  const avatarLocalPath = req.file?.path;
+  // console.log(avatarLocalPath);
 
-  let displayPicture = null;
-  if (displayPictureLocalPath) {
-    displayPicture = await uploadCloudinary(displayPictureLocalPath);
-    // console.log("Cloudinary upload result:", displayPicture);
+  let avatar = null;
+  if (avatarLocalPath) {
+    avatar = await uploadCloudinary(avatarLocalPath);
+    // console.log("Cloudinary upload result:", avatar);
 
-    if (!displayPicture) {
+    if (!avatar) {
       throw new ApiError(500, "Failed to upload display picture in Cloudinary");
     }
   } else {
@@ -75,7 +73,10 @@ const registerUser = asyncHandler(async (req, res) => {
     password,
     DOB,
     gender,
-    displayPicture: displayPicture?.url || "",
+    avatar: {
+      url: avatar?.url || "",
+      public_id: avatar?.public_id || "",
+    },
   });
 
   const createdUser = await Patient.findById(user._id).select(
@@ -166,7 +167,14 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 });
 
 const changePassword = asyncHandler(async (req, res) => {
-  const { oldPassword, newPassword } = req.body;
+  const { oldPassword, newPassword, confirmPassword } = req.body;
+
+  if (newPassword !== confirmPassword) {
+    throw new ApiError(
+      400,
+      "Confirmed password is not the same as new password"
+    );
+  }
 
   const user = await Patient.findById(req.user?._id);
 
@@ -193,7 +201,7 @@ const changeUserDetails = asyncHandler(async (req, res) => {
 
   if (
     [userName, email, phoneNumber, DOB, gender, password].some(
-      (field) => !field || field?.trim() === ""
+      (field) => field === undefined || field?.trim() === ""
     )
   ) {
     throw new ApiError(400, "All fields are required");
@@ -220,14 +228,56 @@ const changeUserDetails = asyncHandler(async (req, res) => {
         gender,
       },
     },
-    { new: true }
-  ).select("-password -refreshToken");
+    { new: true, select: "-password -refreshToken" }
+  );
+
+  if (!updatedUser) {
+    throw new ApiError(404, "User not found or Error while updating values");
+  }
 
   return res
     .status(200)
     .json(
       new ApiResponse(200, updatedUser, "Account details updated successfully")
     );
+});
+
+const changeUserDP = asyncHandler(async (req, res) => {
+  const newAvatarLocalPath = req.file?.path;
+
+  if (!newAvatarLocalPath) {
+    throw new ApiError(400, "Display Picture file is missing");
+  }
+
+  // Delete prev image
+  const deletedPreviousDp = await deleteCloudinary(req.user?.avatar.public_id);
+
+  if (!deletedPreviousDp) {
+    throw new ApiError(400, "Error while deleting previous avatar");
+  }
+
+  // Upload new image
+  const newAvatar = await uploadCloudinary(newAvatarLocalPath);
+
+  if (!newAvatar) {
+    throw new ApiError(400, "Error while uploading on Cloudinary");
+  }
+
+  const updatedUser = await Patient.findByIdAndUpdate(
+    req.user?._id,
+    {
+      $set: {
+        avatar: {
+          url: newAvatar?.url,
+          public_id: newAvatar?.public_id,
+        },
+      },
+    },
+    { new: true, select: "-password -refreshToken" }
+  );
+  return res
+    .status(200)
+    .json(new ApiResponse(200, updatedUser, "Avatar image updated successfully"));
 });
 
 export {
@@ -237,4 +287,5 @@ export {
   refreshAccessToken,
   changePassword,
   changeUserDetails,
+  changeUserDP,
 };
