@@ -6,7 +6,7 @@ import {
   refreshAccessToken,
   changePassword,
   changeUserDetails,
-  changeUserDP,
+  changeUserAvatar,
 } from "../controllers/patient.controller.js";
 
 import { upload } from "../middlewares/multer.middleware.js";
@@ -24,7 +24,7 @@ router.route("/refresh-token").post(verifyJwt, refreshAccessToken);
 router.route("/change-password").post(verifyJwt, changePassword);
 router.route("/change-user-details").post(verifyJwt, changeUserDetails);
 router
-  .route("/change-user-dp")
-  .post(verifyJwt, upload.single("avatar"), changeUserDP);
+  .route("/change-user-avatar")
+  .post(verifyJwt, upload.single("avatar"), changeUserAvatar);
 
 export default router;

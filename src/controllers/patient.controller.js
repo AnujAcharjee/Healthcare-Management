@@ -242,7 +242,7 @@ const changeUserDetails = asyncHandler(async (req, res) => {
     );
 });
 
-const changeUserDP = asyncHandler(async (req, res) => {
+const changeUserAvatar = asyncHandler(async (req, res) => {
   const newAvatarLocalPath = req.file?.path;
 
   if (!newAvatarLocalPath) {
@@ -287,5 +287,5 @@ export {
   refreshAccessToken,
   changePassword,
   changeUserDetails,
-  changeUserDP,
+  changeUserAvatar,
 };
