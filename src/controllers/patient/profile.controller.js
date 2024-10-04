@@ -129,29 +129,36 @@ const deleteUser = asyncHandler(async (req, res) => {
 
   // delete avatar from cloudinary
   if (user.avatar?.public_id) {
-    const deletedAvatar = await deleteCloudinary(user.avatar.public_id);
+    const deletedAvatar = await deleteCloudinary(user.avatar?.public_id);
 
     if (!deletedAvatar) {
       throw new ApiError(500, "Error deleting avatar from Cloudinary");
     }
+    console.log("avatar deleted");
   }
 
+  // Find the user's medical records
   const medicalRecords = await MedicalRecord.findOne({
     patientId: user._id,
   });
+  console.log("found medical records");
 
   // delete medical record files from cloudinary
-  try {
-    if (medicalRecords) {
-      await deleteArrayElements(medicalRecords.labTestReports);
-      await deleteArrayElements(medicalRecords.otherReports);
-    }
-  } catch (error) {
-    throw new ApiError(500, "Error deleting medical reports from Cloudinary");
+  if (medicalRecords) {
+    await deleteArrayElements(medicalRecords.labTestReports);
+    console.log("deleted labtest reports");
+    await deleteArrayElements(medicalRecords.otherReports);
+    console.log("deleted other reports");
   }
+  console.log("came after medical reports cloud delete");
+  
 
   await Patient.findByIdAndDelete(user._id); // delete profile from DB
+  console.log("Patient deleted");
+  
   await MedicalRecord.findByIdAndDelete(medicalRecords._id); //delete medical records from DB
+  console.log("medical records deleted");
+  
 
   return res
     .status(200)

@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-// sub schema -- controller in doctor section
+// sub schema -- controller in doctor/ hospital section
 const prescriptionSchema = new mongoose.Schema(
   {
     doctorId: {
@@ -30,28 +30,18 @@ const prescriptionSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// sub schema -- controller hospital section /lab
+// sub schema -- controller hospital section / lab / patient
 const labTestSchema = new mongoose.Schema(
   {
     labName: {
       type: String,
       required: true,
     },
-    labContacts: {
-      phoneNumber: {
-        type: String,
-        required: true,
-      },
-      email: {
-        type: String,
-        required: true,
-      },
-      address: {
-        type: String,
-        required: true,
-      },
+    testType: {
+      type: String,
+      required: true,
     },
-    testFor: {
+    description: {
       type: String,
       required: true,
     },

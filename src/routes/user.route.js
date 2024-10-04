@@ -9,6 +9,8 @@ import {
   changeUserProfile,
   changeUserAvatar,
   deleteUser,
+  uploadOtherReports,
+  uploadLabTestReports,
 } from "../controllers/patient/index.js";
 
 import { upload } from "../middlewares/multer.middleware.js";
@@ -30,5 +32,14 @@ router
   .route("/profile/update/avatar")
   .patch(verifyJwt, upload.single("avatar"), changeUserAvatar);
 router.route("/profile/delete").delete(verifyJwt, deleteUser);
+
+// user medical records
+uploadOtherReports;
+router
+  .route("/medical-records/other-reports")
+  .post(verifyJwt, upload.single("medicalReport"), uploadOtherReports);
+router
+  .route("/medical-records/lab-test-reports")
+  .post(verifyJwt, upload.single("labTestReport"), uploadLabTestReports);
 
 export default router;

@@ -44,7 +44,7 @@ const deleteCloudinary = async (publicId) => {
 const deleteArrayElements = async (arr) => {
   if (arr.length > 0) {
     for (const element of arr) {
-      if (uploadedFile) {
+      if (element.uploadedFile) {
         await deleteCloudinary(element.uploadedFile?.public_id);
       }
     }

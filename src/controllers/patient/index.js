@@ -13,6 +13,12 @@ import {
   deleteUser,
 } from "../patient/profile.controller.js";
 
+import { 
+    uploadOtherReports,
+    uploadLabTestReports, 
+
+} from "../patient/medicalRecords.controller.js";
+
 export {
   registerUser,
   loginUser,
@@ -23,4 +29,6 @@ export {
   changeUserProfile,
   changeUserAvatar,
   deleteUser,
+  uploadOtherReports,
+  uploadLabTestReports,
 };
