@@ -5,26 +5,30 @@ import {
   logoutUser,
   refreshAccessToken,
   changePassword,
-  changeUserDetails,
+  userProfile,
+  changeUserProfile,
   changeUserAvatar,
-} from "../controllers/patient.controller.js";
+  deleteUser,
+} from "../controllers/patient/index.js";
 
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJwt } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
+// authentication
 router.route("/register").post(upload.single("avatar"), registerUser);
-
 router.route("/login").post(loginUser);
-
-// secure routes
 router.route("/logout").post(verifyJwt, logoutUser);
 router.route("/refresh-token").post(verifyJwt, refreshAccessToken);
-router.route("/change-password").post(verifyJwt, changePassword);
-router.route("/change-user-details").post(verifyJwt, changeUserDetails);
+router.route("/reset-password").post(verifyJwt, changePassword);
+
+// user profile
+router.route("/profile").get(verifyJwt, userProfile);
+router.route("/profile/update").patch(verifyJwt, changeUserProfile);
 router
-  .route("/change-user-avatar")
-  .post(verifyJwt, upload.single("avatar"), changeUserAvatar);
+  .route("/profile/update/avatar")
+  .patch(verifyJwt, upload.single("avatar"), changeUserAvatar);
+router.route("/profile/delete").delete(verifyJwt, deleteUser);
 
 export default router;

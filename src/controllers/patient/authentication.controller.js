@@ -1,8 +1,9 @@
-import asyncHandler from "../utils/asyncHandler.js";
-import ApiError from "../utils/ApiError.js";
-import ApiResponse from "../utils/ApiResponse.js";
-import { Patient } from "../models/patient.model.js";
-import { uploadCloudinary, deleteCloudinary } from "../utils/cloudinary.js";
+import asyncHandler from "../../utils/asyncHandler.js";
+import ApiError from "../../utils/ApiError.js";
+import ApiResponse from "../../utils/ApiResponse.js";
+import { Patient } from "../../models/patient.model.js";
+import { MedicalRecord } from "../../models/medicalRecords.model.js";
+import { uploadCloudinary } from "../../utils/cloudinary.js";
 
 // cookies options
 const options = {
@@ -10,6 +11,7 @@ const options = {
   secure: true,
 };
 
+// utility fn to generate tokens
 const generateAccessTokenAndRefreshToken = async (userId) => {
   try {
     const user = await Patient.findById(userId);
@@ -66,6 +68,7 @@ const registerUser = asyncHandler(async (req, res) => {
     console.warn("No display picture provided");
   }
 
+  // creating Patient Doc. for user
   const user = await Patient.create({
     userName,
     email,
@@ -87,9 +90,28 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new ApiError(500, "Something went wrong while registering the user");
   }
 
+  // creating medicalRecords Doc. for user at the time of registration
+  const medicalRecords = await MedicalRecord.create({
+    patientId: user._id,
+    prescriptions: [],
+    labTestReports: [],
+    otherReports: [],
+  });
+
+  if (!medicalRecords) {
+    await Patient.findByIdAndDelete(user._id); // delete patient Doc.
+    throw new ApiError(500, "Failed to create medical records");
+  }
+
   return res
     .status(201)
-    .json(new ApiResponse(201, createdUser, "User registered Successfully"));
+    .json(
+      new ApiResponse(
+        201,
+        { user: createdUser, medicalRecords },
+        "User registered Successfully"
+      )
+    );
 });
 
 const loginUser = asyncHandler(async (req, res) => {
@@ -196,96 +218,10 @@ const changePassword = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, {}, "Password change successful"));
 });
 
-const changeUserDetails = asyncHandler(async (req, res) => {
-  const { userName, email, phoneNumber, DOB, gender, password } = req.body;
-
-  if (
-    [userName, email, phoneNumber, DOB, gender, password].some(
-      (field) => field === undefined || field?.trim() === ""
-    )
-  ) {
-    throw new ApiError(400, "All fields are required");
-  }
-
-  const user = await Patient.findById(req.user?._id);
-  if (!user) {
-    throw new ApiError(404, "User not found");
-  }
-
-  const isValidPassword = await user.isPasswordCorrect(password);
-  if (!isValidPassword) {
-    throw new ApiError(400, "Invalid password");
-  }
-
-  const updatedUser = await Patient.findByIdAndUpdate(
-    req.user?._id,
-    {
-      $set: {
-        userName,
-        email,
-        phoneNumber,
-        DOB,
-        gender,
-      },
-    },
-    { new: true, select: "-password -refreshToken" }
-  );
-
-  if (!updatedUser) {
-    throw new ApiError(404, "User not found or Error while updating values");
-  }
-
-  return res
-    .status(200)
-    .json(
-      new ApiResponse(200, updatedUser, "Account details updated successfully")
-    );
-});
-
-const changeUserAvatar = asyncHandler(async (req, res) => {
-  const newAvatarLocalPath = req.file?.path;
-
-  if (!newAvatarLocalPath) {
-    throw new ApiError(400, "Display Picture file is missing");
-  }
-
-  // Delete prev image
-  const deletedPreviousDp = await deleteCloudinary(req.user?.avatar.public_id);
-
-  if (!deletedPreviousDp) {
-    throw new ApiError(400, "Error while deleting previous avatar");
-  }
-
-  // Upload new image
-  const newAvatar = await uploadCloudinary(newAvatarLocalPath);
-
-  if (!newAvatar) {
-    throw new ApiError(400, "Error while uploading on Cloudinary");
-  }
-
-  const updatedUser = await Patient.findByIdAndUpdate(
-    req.user?._id,
-    {
-      $set: {
-        avatar: {
-          url: newAvatar?.url,
-          public_id: newAvatar?.public_id,
-        },
-      },
-    },
-    { new: true, select: "-password -refreshToken" }
-  );
-  return res
-    .status(200)
-    .json(new ApiResponse(200, updatedUser, "Avatar image updated successfully"));
-});
-
 export {
   registerUser,
   loginUser,
   logoutUser,
   refreshAccessToken,
   changePassword,
-  changeUserDetails,
-  changeUserAvatar,
 };

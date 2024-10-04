@@ -40,4 +40,15 @@ const deleteCloudinary = async (publicId) => {
   }
 };
 
-export { uploadCloudinary, deleteCloudinary };
+// delete all files in cloudinary in an array
+const deleteArrayElements = async (arr) => {
+  if (arr.length > 0) {
+    for (const element of arr) {
+      if (uploadedFile) {
+        await deleteCloudinary(element.uploadedFile?.public_id);
+      }
+    }
+  }
+};
+
+export { uploadCloudinary, deleteCloudinary, deleteArrayElements };

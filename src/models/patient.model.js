@@ -38,7 +38,6 @@ const patientSchema = new mongoose.Schema(
       enum: ["male", "female", "other"],
       required: true,
     },
-    medicalReports: [],
     refreshToken: {
       type: String,
     },
