@@ -1,8 +1,12 @@
-import mongoose from "mongoose";
-import bcrypt, { hash } from "bcrypt";
-import jwt from "jsonwebtoken";
+import mongoose, { Schema } from "mongoose";
+import {
+  hashPassword,
+  isPasswordCorrect,
+  generateAccessToken,
+  generateRefreshToken,
+} from "../utils/auth.js";
 
-const patientSchema = new mongoose.Schema(
+const patientSchema = new Schema(
   {
     userName: {
       type: String,
@@ -19,11 +23,11 @@ const patientSchema = new mongoose.Schema(
     },
     avatar: {
       url: {
-        type: String
+        type: String,
       },
       public_id: {
-        type: String
-      }
+        type: String,
+      },
     },
     password: {
       type: String,
@@ -38,51 +42,32 @@ const patientSchema = new mongoose.Schema(
       enum: ["male", "female", "other"],
       required: true,
     },
+    bedAllocation: {
+      type: Schema.Types.ObjectId,
+      ref: "Bed",
+    },
+    opdAppointments: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "OPDAppointment",
+      },
+    ],
     refreshToken: {
       type: String,
+    },
+    userType: {
+      type: String,
+      default: "Patient",
     },
   },
   { timestamps: true }
 );
 
-patientSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
+patientSchema.pre("save", hashPassword);
 
-  this.password = await bcrypt.hash(this.password, 10);
-  next();
-});
-
-patientSchema.methods.isPasswordCorrect = async function (password) {
-  if (!password) {
-    throw new Error('Password not provided');
-  }
-  
-  return await bcrypt.compare(password, this.password);
-};
-
-patientSchema.methods.generateAccessToken = function () {
-  return jwt.sign(
-    {
-      _id: this._id,
-      user: this.user,
-    },
-    process.env.ACCESS_TOKEN_SECRET,
-    {
-      expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
-    }
-  );
-};
-
-patientSchema.methods.generateRefreshToken = function () {
-  return jwt.sign(
-    {
-      _id: this._id,
-    },
-    process.env.REFRESH_TOKEN_SECRET,
-    {
-      expiresIn: process.env.REFRESH_TOKEN_EXPIRY,
-    }
-  );
-};
+// Add methods to the schema  --> to get the context of this
+patientSchema.methods.isPasswordCorrect = isPasswordCorrect;
+patientSchema.methods.generateAccessToken = generateAccessToken;
+patientSchema.methods.generateRefreshToken = generateRefreshToken;
 
 export const Patient = mongoose.model("Patient", patientSchema);

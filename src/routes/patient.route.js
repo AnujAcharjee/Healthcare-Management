@@ -1,14 +1,14 @@
 import { Router } from "express";
 import {
-  registerUser,
-  loginUser,
-  logoutUser,
+  registerPatient,
+  loginPatient,
+  logoutPatient,
   refreshAccessToken,
   changePassword,
-  userProfile,
-  changeUserProfile,
-  changeUserAvatar,
-  deleteUser,
+  patientProfile,
+  changePatientProfile,
+  changePatientAvatar,
+  deletePatient,
   uploadOtherReports,
   uploadLabTestReports,
 } from "../controllers/patient/index.js";
@@ -19,21 +19,21 @@ import { verifyJwt } from "../middlewares/auth.middleware.js";
 const router = Router();
 
 // authentication
-router.route("/register").post(upload.single("avatar"), registerUser);
-router.route("/login").post(loginUser);
-router.route("/logout").post(verifyJwt, logoutUser);
+router.route("/register").post(upload.single("avatar"), registerPatient);
+router.route("/login").post(loginPatient);
+router.route("/logout").post(verifyJwt, logoutPatient);
 router.route("/refresh-token").post(verifyJwt, refreshAccessToken);
 router.route("/reset-password").post(verifyJwt, changePassword);
 
-// user profile
-router.route("/profile").get(verifyJwt, userProfile);
-router.route("/profile/update").patch(verifyJwt, changeUserProfile);
+// patient profile
+router.route("/profile").get(verifyJwt, patientProfile);
+router.route("/profile/update").patch(verifyJwt, changePatientProfile);
 router
   .route("/profile/update/avatar")
-  .patch(verifyJwt, upload.single("avatar"), changeUserAvatar);
-router.route("/profile/delete").delete(verifyJwt, deleteUser);
+  .patch(verifyJwt, upload.single("avatar"), changePatientAvatar);
+router.route("/profile/delete").delete(verifyJwt, deletePatient);
 
-// user medical records
+// patient medical records
 uploadOtherReports;
 router
   .route("/medical-records/other-reports")

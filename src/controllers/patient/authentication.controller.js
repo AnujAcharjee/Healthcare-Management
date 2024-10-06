@@ -4,34 +4,16 @@ import ApiResponse from "../../utils/ApiResponse.js";
 import { Patient } from "../../models/patient.model.js";
 import { MedicalRecord } from "../../models/medicalRecords.model.js";
 import { uploadCloudinary } from "../../utils/cloudinary.js";
+import { generateAccessTokenAndRefreshToken } from "../../utils/auth.js";
 
 // cookies options
 const options = {
   httpOnly: true,
   secure: true,
+  sameSite: "Strict",
 };
 
-// utility fn to generate tokens
-const generateAccessTokenAndRefreshToken = async (userId) => {
-  try {
-    const user = await Patient.findById(userId);
-
-    const accessToken = user.generateAccessToken();
-    const refreshToken = user.generateRefreshToken();
-
-    user.refreshToken = refreshToken;
-    await user.save({ validateBeforeSave: false });
-
-    return { accessToken, refreshToken };
-  } catch (error) {
-    throw new ApiError(
-      500,
-      "Something went wrong while generating refresh and access token"
-    );
-  }
-};
-
-const registerUser = asyncHandler(async (req, res) => {
+const registerPatient = asyncHandler(async (req, res) => {
   // console.log("Request body:", req.body);
   // console.log("Uploaded files:", req.files);
 
@@ -114,16 +96,16 @@ const registerUser = asyncHandler(async (req, res) => {
     );
 });
 
-const loginUser = asyncHandler(async (req, res) => {
+const loginPatient = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
-  if (!email && !password) {
+  if (!email || !password) {
     throw new ApiError(400, "Email and password are required");
   }
 
   const user = await Patient.findOne({ email });
 
-  if (!user) {
+  if (!user || user.userType !== "Patient") {
     throw new ApiError(404, "User does not exist");
   }
 
@@ -134,7 +116,7 @@ const loginUser = asyncHandler(async (req, res) => {
   }
 
   const { accessToken, refreshToken } =
-    await generateAccessTokenAndRefreshToken(user._id);
+    await generateAccessTokenAndRefreshToken(Patient, user._id);
 
   const loggedInUser = await Patient.findById(user._id).select(
     "-password -refreshToken"
@@ -157,7 +139,9 @@ const loginUser = asyncHandler(async (req, res) => {
     );
 });
 
-const logoutUser = asyncHandler(async (req, res) => {
+const logoutPatient = asyncHandler(async (req, res) => {
+  console.log(req.user);
+
   await Patient.findByIdAndUpdate(req.user._id, {
     $unset: {
       refreshToken: 1, // this removes the field from document
@@ -173,7 +157,7 @@ const logoutUser = asyncHandler(async (req, res) => {
 
 const refreshAccessToken = asyncHandler(async (req, res) => {
   const { accessToken, refreshToken } =
-    await generateAccessTokenAndRefreshToken(req.user._id);
+    await generateAccessTokenAndRefreshToken(Patient, req.user._id);
 
   return res
     .status(200)
@@ -219,9 +203,9 @@ const changePassword = asyncHandler(async (req, res) => {
 });
 
 export {
-  registerUser,
-  loginUser,
-  logoutUser,
+  registerPatient,
+  loginPatient,
+  logoutPatient,
   refreshAccessToken,
   changePassword,
 };

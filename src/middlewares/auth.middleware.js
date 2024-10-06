@@ -2,6 +2,7 @@ import asyncHandler from "../utils/asyncHandler.js";
 import ApiError from "../utils/ApiError.js";
 import jwt from "jsonwebtoken";
 import { Patient } from "../models/patient.model.js";
+import { Hospital } from "../models/hospital.model.js";
 
 export const verifyJwt = asyncHandler(async (req, _, next) => {
   const accessToken =
@@ -21,15 +22,22 @@ export const verifyJwt = asyncHandler(async (req, _, next) => {
       process.env.ACCESS_TOKEN_SECRET
     );
 
-    const user = await Patient.findById(decodedAccessToken?._id).select(
-      "-password -refreshToken"
-    );
+    let user;
+    if (decodedAccessToken.userType === "Patient") {
+      user = await Patient.findById(decodedAccessToken?._id).select(
+        "-password -refreshToken"
+      );
+    } else if (decodedAccessToken.userType === "Hospital") {
+      user = await Hospital.findById(decodedAccessToken?._id).select(
+        "-password -refreshToken"
+      );
+    }
 
     if (!user) {
       throw new ApiError(401, "Unauthorized user");
     }
 
-    req.user = user;
+    req.user = user; // setting user obj in req body
     return next();
   } catch (error) {
     if (error.name === "TokenExpiredError") {
@@ -39,7 +47,7 @@ export const verifyJwt = asyncHandler(async (req, _, next) => {
     }
   }
 
-  // with Refresh token - Access Token expired
+  // If access token expired, handle refresh token
   const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
 
   if (!refreshToken) {
@@ -52,15 +60,23 @@ export const verifyJwt = asyncHandler(async (req, _, next) => {
       process.env.REFRESH_TOKEN_SECRET
     );
 
-    const user = await Patient.findById(decodedRefreshToken?._id).select(
-      "-password -refreshToken"
-    );
+    let user;
+    if (decodedAccessToken.userType === "Patient") {
+      user = await Patient.findById(decodedAccessToken?._id).select(
+        "-password -refreshToken"
+      );
+    } else if (decodedAccessToken.userType === "Hospital") {
+      user = await Hospital.findById(decodedAccessToken?._id).select(
+        "-password -refreshToken"
+      );
+    }
 
     if (!user) {
       throw new ApiError(403, "Invalid refresh token");
     }
 
-    req.user = user;
+    req.user = user; // setting user obj in req body
+
     return next();
   } catch (error) {
     throw new ApiError(403, "Invalid or expired refresh token");

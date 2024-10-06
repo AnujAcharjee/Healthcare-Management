@@ -1,34 +1,34 @@
 import {
-  registerUser,
-  loginUser,
-  logoutUser,
+  registerPatient,
+  loginPatient,
+  logoutPatient,
   refreshAccessToken,
   changePassword,
-} from "../patient/authentication.controller.js";
+} from "./authentication.controller.js";
 
 import {
-  userProfile,
-  changeUserProfile,
-  changeUserAvatar,
-  deleteUser,
-} from "../patient/profile.controller.js";
+  patientProfile,
+  changePatientProfile,
+  changePatientAvatar,
+  deletePatient,
+} from "./profile.controller.js";
 
 import { 
     uploadOtherReports,
     uploadLabTestReports, 
 
-} from "../patient/medicalRecords.controller.js";
+} from "./medicalRecords.controller.js";
 
 export {
-  registerUser,
-  loginUser,
-  logoutUser,
+  registerPatient,
+  loginPatient,
+  logoutPatient,
   refreshAccessToken,
   changePassword,
-  userProfile,
-  changeUserProfile,
-  changeUserAvatar,
-  deleteUser,
+  patientProfile,
+  changePatientProfile,
+  changePatientAvatar,
+  deletePatient,
   uploadOtherReports,
   uploadLabTestReports,
 };

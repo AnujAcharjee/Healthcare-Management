@@ -9,7 +9,7 @@ import {
   deleteArrayElements,
 } from "../../utils/cloudinary.js";
 
-const userProfile = asyncHandler(async (req, res) => {
+const patientProfile = asyncHandler(async (req, res) => {
   const user = await Patient.findById(req.user?._id).select(
     "-password -refreshToken"
   );
@@ -21,7 +21,7 @@ const userProfile = asyncHandler(async (req, res) => {
   return res.status(200).json(new ApiResponse(200, user));
 });
 
-const changeUserProfile = asyncHandler(async (req, res) => {
+const changePatientProfile = asyncHandler(async (req, res) => {
   const { userName, email, phoneNumber, DOB, gender, password } = req.body;
 
   if (
@@ -67,7 +67,7 @@ const changeUserProfile = asyncHandler(async (req, res) => {
     );
 });
 
-const changeUserAvatar = asyncHandler(async (req, res) => {
+const changePatientAvatar = asyncHandler(async (req, res) => {
   const newAvatarLocalPath = req.file?.path;
 
   if (!newAvatarLocalPath) {
@@ -109,7 +109,7 @@ const changeUserAvatar = asyncHandler(async (req, res) => {
     );
 });
 
-const deleteUser = asyncHandler(async (req, res) => {
+const deletePatient = asyncHandler(async (req, res) => {
   const { password } = req.body;
 
   if (!password) {
@@ -165,4 +165,4 @@ const deleteUser = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, user.userName, "User deletion successful"));
 });
 
-export { userProfile, changeUserProfile, changeUserAvatar, deleteUser };
+export { patientProfile, changePatientProfile, changePatientAvatar, deletePatient };

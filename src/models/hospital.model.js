@@ -1,31 +1,33 @@
-import mongoose from "mongoose";
-import { Patient } from "./patient";
-import { Inventory } from "./inventory.model";
+import mongoose, { Schema } from "mongoose";
+import {
+  hashPassword,
+  isPasswordCorrect,
+  generateAccessToken,
+  generateRefreshToken,
+} from "../utils/auth.js";
 
-const hospitalSchema = new mongoose.Schema(
+const hospitalSchema = new Schema(
   {
     name: {
       type: String,
       required: "true",
     },
-    location: {
+    email: {
       type: String,
-      required: "true",
+      required: true,
     },
-    image: {
-      filename: {
-        type: String,
-        default: "default_img",
-      },
-      url: {
-        type: String,
-        default:
-          "https://plus.unsplash.com/premium_photo-1681995326134-cdc947934015?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-        set: (v) =>
-          v === ""
-            ? "https://plus.unsplash.com/premium_photo-1681995326134-cdc947934015?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-            : v,
-      },
+    phone: {
+      type: String,
+      required: true,
+    },
+    password: {
+      type: String,
+      required: true,
+    },
+    location: {
+      state: String,
+      city: String,
+      zip: String,
     },
     ownership: {
       type: String,
@@ -33,36 +35,60 @@ const hospitalSchema = new mongoose.Schema(
       enum: ["government", "private"],
       required: "true",
     },
-    doctor: [
-
-    ],
-    bed: {
-      count: {
-        type: Number,
-        required: "true",
+    coverImage: {
+      url: {
+        type: String,
       },
-      occupied: [
-        {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Patient",
-          default: null,
-        },
-      ],
+      public_id: {
+        type: String,
+      },
     },
-    inventory: {
-      type: Schema.Types.ObjectId,
-      ref: "Inventory",
+    departments: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Department",
+      },
+    ],
+    doctors: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Doctor",
+      },
+    ],
+    refreshToken: {
+      type: String,
     },
+    userType: {
+      type: String,
+      default: "Hospital",
+    },
+    // allocatedBeds: [
+    //   {
+    //     type: Schema.Types.ObjectId,
+    //     ref: "Bed",
+    //   },
+    // ],
+    // allOPDs: [
+    //   {
+    //     type: Schema.Types.ObjectId,
+    //     ref: "OPDAppointment",
+    //   },
+    // ],
+    // inventory_items: [
+    //   {
+    //     type: Schema.Types.ObjectId,
+    //     ref: "Inventory",
+    //   },
+    // ],
   },
   { timestamps: true }
 );
 
-// Pre-save middleware to initialize the beds array (all as null) based on bedCount
-hospitalSchema.pre("save", function (next) {
-  if (!this.bed.status || this.bed.status.length !== this.bed.count) {
-    this.bed.status = Array.from({ length: this.bed.count }, () => null);
-  }
-  next();
-});
+hospitalSchema.pre("save", hashPassword);
+
+// Add methods to the schema
+hospitalSchema.methods.isPasswordCorrect = isPasswordCorrect;
+hospitalSchema.methods.generateAccessToken = generateAccessToken;
+hospitalSchema.methods.generateRefreshToken = generateRefreshToken;
 
 export const Hospital = mongoose.model("Hospital", hospitalSchema);

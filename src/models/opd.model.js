@@ -1,36 +1,44 @@
-import mongoose from "mongoose";
-import { Patient } from "./patient";
+import mongoose, { Schema } from "mongoose";
 
-const opdSchema = new mongoose.Schema(
-  {
-    doctor: {
-      type: String,
-      required: true,
-    },
-    appointmentDate_Time: {
-      type: Date,
-      required: true,
-    },
-    patientQueue: [
-      {
-        patientId: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Patient",
-          required: true,
-        },
-        status: {
-          type: String,
-          enum: ["pending", "completed", "cancelled"],
-          default: "pending"
-        },
-        time: {
-            type: String,
-            required: true
-        }
-      },
-    ],
+const OPDSchema = new Schema({
+  type: {
+    type: String,
+    required: true,
   },
-  { timestamps: true }
-);
+  description: {
+    type: String,
+    required: true,
+  },
+  appointmentDate: {
+    type: Date,
+    required: true,
+  },
+  duration: {
+    type: String,
+    required: true,
+  },
+  status: {
+    type: String,
+    enum: ["Scheduled", "Completed", "Cancelled"],
+    default: "Scheduled",
+  },
+  doctorId: {
+    type: Schema.Types.ObjectId,
+    ref: "Doctor",
+    required: true,
+  },
+  hospitalId: {
+    type: Schema.Types.ObjectId,
+    ref: "Hospital",
+    required: true,
+  },
+  appointedPatients: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "Patient",
+      required: true,
+    },
+  ],
+});
 
-export const OPD = mongoose.model("OPD", opdSchema);
+export const OPD = mongoose.model("OPD", OPDSchema);
