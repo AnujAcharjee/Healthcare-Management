@@ -43,7 +43,7 @@ const changePatientProfile = asyncHandler(async (req, res) => {
   }
 
   const updatedUser = await Patient.findByIdAndUpdate(
-    req.user?._id,
+    user?._id,
     {
       $set: {
         userName,
@@ -134,30 +134,30 @@ const deletePatient = asyncHandler(async (req, res) => {
     if (!deletedAvatar) {
       throw new ApiError(500, "Error deleting avatar from Cloudinary");
     }
-    console.log("avatar deleted");
+    // console.log("avatar deleted");
   }
 
   // Find the user's medical records
   const medicalRecords = await MedicalRecord.findOne({
     patientId: user._id,
   });
-  console.log("found medical records");
+  // console.log("found medical records");
 
-  // delete medical record files from cloudinary
+  // Delete medical record files from cloudinary
   if (medicalRecords) {
     await deleteArrayElements(medicalRecords.labTestReports);
     console.log("deleted labtest reports");
     await deleteArrayElements(medicalRecords.otherReports);
     console.log("deleted other reports");
   }
-  console.log("came after medical reports cloud delete");
+  // console.log("came after medical reports cloud delete");
   
 
-  await Patient.findByIdAndDelete(user._id); // delete profile from DB
-  console.log("Patient deleted");
+  await Patient.findByIdAndDelete(user._id); // Delete profile from DB
+  // console.log("Patient deleted");
   
-  await MedicalRecord.findByIdAndDelete(medicalRecords._id); //delete medical records from DB
-  console.log("medical records deleted");
+  await MedicalRecord.findByIdAndDelete(medicalRecords._id); //Delete medical records from DB
+  // console.log("medical records deleted");
   
 
   return res
