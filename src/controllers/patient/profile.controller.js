@@ -9,10 +9,30 @@ import {
   deleteArrayElements,
 } from "../../utils/cloudinary.js";
 
-const patientProfile = asyncHandler(async (req, res) => {
-  const user = await Patient.findById(req.user?._id).select(
-    "-password -refreshToken"
-  );
+const getPatientProfile = asyncHandler(async (req, res) => {
+  const user = await Patient.aggregate([
+    { $match: { _id: req.user?._id } },
+    {
+      $lookup: {
+        from: "allocated_beds",
+        localField: "email",
+        foreignField: "patientEmail",
+        as: "bedAllocated",
+      },
+    },
+    {
+      $project: {
+        userName: 1,
+        email: 1,
+        phoneNumber: 1,
+        avatar: 1,
+        DOB: 1,
+        gender: 1,
+        bedAllocated: 1,
+        opdAppointments: 1,
+      },
+    },
+  ]);
 
   if (!user) {
     throw new ApiError(404, "User not found");
@@ -151,18 +171,21 @@ const deletePatient = asyncHandler(async (req, res) => {
     console.log("deleted other reports");
   }
   // console.log("came after medical reports cloud delete");
-  
 
   await Patient.findByIdAndDelete(user._id); // Delete profile from DB
   // console.log("Patient deleted");
-  
+
   await MedicalRecord.findByIdAndDelete(medicalRecords._id); //Delete medical records from DB
   // console.log("medical records deleted");
-  
 
   return res
     .status(200)
     .json(new ApiResponse(200, user.userName, "User deletion successful"));
 });
 
-export { patientProfile, changePatientProfile, changePatientAvatar, deletePatient };
+export {
+  getPatientProfile,
+  changePatientProfile,
+  changePatientAvatar,
+  deletePatient,
+};

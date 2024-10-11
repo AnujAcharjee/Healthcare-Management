@@ -1,27 +1,22 @@
 import mongoose, { Schema } from "mongoose";
 
 const allocatedBedSchema = new Schema({
-  // hospitalId: {
-  //   type: Schema.Types.ObjectId,
-  //   ref: "Hospital",
-  //   required: true,
-  // },
-  departmentId: {
-    type: Schema.Types.ObjectId,
-    ref: "Department",
-  },
-  ward: {
-    type: String,
-    required: true,
-  },
   bedNumber: {
     type: String,
     required: true,
   },
-  patientId: {
+  patientEmail: {
+    type: String,
+    required: true
+  },
+  duration: {
+    type: String,
+    required: true,
+  },
+  ward_id: {
     type: Schema.Types.ObjectId,
-    ref: "Patient",
+    ref: "Ward",
   },
 });
 
-export const Bed = mongoose.model("Bed", allocatedBedSchema);
+export const Allocated_bed = mongoose.model("Allocated_bed", allocatedBedSchema);

@@ -10,15 +10,17 @@ const hospitalSchema = new Schema(
   {
     name: {
       type: String,
-      required: "true",
+      required: true,
     },
     email: {
       type: String,
       required: true,
+      unique: true,
     },
     phone: {
       type: String,
       required: true,
+      unique: true,
     },
     password: {
       type: String,
@@ -33,7 +35,7 @@ const hospitalSchema = new Schema(
       type: String,
       lowercase: true,
       enum: ["government", "private"],
-      required: "true",
+      required: true,
     },
     coverImage: {
       url: {
@@ -43,18 +45,6 @@ const hospitalSchema = new Schema(
         type: String,
       },
     },
-    departments: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "Department",
-      },
-    ],
-    doctors: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "Doctor",
-      },
-    ],
     refreshToken: {
       type: String,
     },
@@ -62,24 +52,6 @@ const hospitalSchema = new Schema(
       type: String,
       default: "Hospital",
     },
-    // allocatedBeds: [
-    //   {
-    //     type: Schema.Types.ObjectId,
-    //     ref: "Bed",
-    //   },
-    // ],
-    // allOPDs: [
-    //   {
-    //     type: Schema.Types.ObjectId,
-    //     ref: "OPDAppointment",
-    //   },
-    // ],
-    // inventory_items: [
-    //   {
-    //     type: Schema.Types.ObjectId,
-    //     ref: "Inventory",
-    //   },
-    // ],
   },
   { timestamps: true }
 );

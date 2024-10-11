@@ -13,6 +13,16 @@ import {
   deleteHospital,
 } from "./profile.controller.js";
 
+import {
+  createDepartment,
+  createWard,
+  getAllWards,
+  updateWard,
+  allocateBed,
+  getAllocatedBedsInfo,
+  deleteAllocatedBed
+} from "./department.controller.js";
+
 export {
   registerHospital,
   loginHospital,
@@ -23,4 +33,11 @@ export {
   changeCoverImage,
   changeHospitalProfile,
   deleteHospital,
+  createDepartment,
+  createWard,
+  getAllWards,
+  updateWard,
+  allocateBed,
+  getAllocatedBedsInfo,
+  deleteAllocatedBed
 };

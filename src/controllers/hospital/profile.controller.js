@@ -9,15 +9,34 @@ import {
 } from "../../utils/cloudinary.js";
 
 const hospitalProfile = asyncHandler(async (req, res) => {
-  const user = await Hospital.findById(req.user?._id).select(
-    "-password -refreshToken"
-  );
+  const user = await Hospital.aggregate([
+    { $match: { _id: req.user?._id } },
+    {
+      $lookup: {
+        from: "departments",
+        localField: "_id",
+        foreignField: "hospital_id",
+        as: "departments",
+      },
+    },
+    {
+      $project: {
+        name: 1,
+        email: 1,
+        phone: 1,
+        location: 1,
+        ownership: 1,
+        coverImage: 1,
+        departments:  "$departments.name" ,
+      },
+    },
+  ]);
 
   if (!user) {
     throw new ApiError(404, "Hospital not found");
   }
 
-  return res.status(200).json(new ApiResponse(200, user));
+  return res.status(200).json(new ApiResponse(200, user, "Hospital profile retrieved successfully."));
 });
 
 const changeHospitalProfile = asyncHandler(async (req, res) => {
@@ -135,34 +154,24 @@ const deleteHospital = asyncHandler(async (req, res) => {
 
   // delete avatar from cloudinary
   if (user.coverImage?.public_id) {
-    const deletedCoverImage = await deleteCloudinary(user.coverImage?.public_id);
+    const deletedCoverImage = await deleteCloudinary(
+      user.coverImage?.public_id
+    );
 
     if (!deletedCoverImage) {
       throw new ApiError(500, "Error deleting CoverImage from Cloudinary");
     }
-    // console.log("CoverImage deleted");
   }
 
-  // // Find the user's medical records
-  // const medicalRecords = await MedicalRecord.findOne({
-  //   patientId: user._id,
-  // });
-  // console.log("found medical records");
+  // delete departments
 
-  // // delete medical record files from cloudinary
-  // if (medicalRecords) {
-  //   await deleteArrayElements(medicalRecords.labTestReports);
-  //   console.log("deleted labtest reports");
-  //   await deleteArrayElements(medicalRecords.otherReports);
-  //   console.log("deleted other reports");
-  // }
-  // console.log("came after medical reports cloud delete");
+  //delete wards
+
+  // delete inventory
+
+  // delete opd
 
   await Hospital.findByIdAndDelete(user._id); // delete profile from DB
-  // console.log("Hospital deleted");
-
-  // await MedicalRecord.findByIdAndDelete(medicalRecords._id); //delete medical records from DB
-  // console.log("medical records deleted");
 
   return res
     .status(200)

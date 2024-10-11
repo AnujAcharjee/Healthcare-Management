@@ -5,13 +5,13 @@ import {
   logoutPatient,
   refreshAccessToken,
   changePassword,
-  patientProfile,
+  getPatientProfile,
   changePatientProfile,
   changePatientAvatar,
   deletePatient,
   uploadOtherReports,
   uploadLabTestReports,
-} from "../controllers/patient/index.js";
+} from "../controllers/Patient/index.js";
 
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJwt } from "../middlewares/auth.middleware.js";
@@ -26,7 +26,7 @@ router.route("/refresh-token").post(verifyJwt, refreshAccessToken);
 router.route("/reset-password").post(verifyJwt, changePassword);
 
 // patient profile
-router.route("/profile").get(verifyJwt, patientProfile);
+router.route("/profile").get(verifyJwt, getPatientProfile);
 router.route("/profile/update").patch(verifyJwt, changePatientProfile);
 router
   .route("/profile/update/avatar")

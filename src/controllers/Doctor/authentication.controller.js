@@ -1,7 +1,7 @@
 import asyncHandler from "../../utils/asyncHandler.js";
 import ApiError from "../../utils/ApiError.js";
 import ApiResponse from "../../utils/ApiResponse.js";
-import { Hospital } from "../../models/hospital.model.js";
+import { Doctor } from "../../models/doctor.model.js";
 import { generateAccessTokenAndRefreshToken } from "../../utils/auth.js";
 import { uploadCloudinary } from "../../utils/cloudinary.js";
 
@@ -12,56 +12,49 @@ const options = {
   sameSite: "Strict",
 };
 
-const registerHospital = asyncHandler(async (req, res) => {
-  const { name, password, state, city, zip, address, phone, email, ownership } =
+const registerDoctor = asyncHandler(async (req, res) => {
+  const { name, password, specialization, description, phone, email } =
     req.body;
 
   if (
-    [name, password, state, city, zip, address, phone, email, ownership].some(
+    [name, password, specialization, description, phone, email].some(
       (field) => !field || field?.trim() === ""
     )
   ) {
     throw new ApiError(400, "All fields are required");
   }
 
-  const isExistingHospital = await Hospital.findOne({
+  const isExistingDoctor = await Doctor.findOne({
     $or: [{ email }, { phone }],
   });
 
-  if (isExistingHospital) {
+  if (isExistingDoctor) {
     throw new ApiError(409, "Email or Phone number already exists");
   }
 
-  const coverImageLocalPath = req.file?.path;
-  // console.log(coverImageLocalPath);
+  const avatarLocalPath = req.file?.path;
 
-  let coverImage = null;
-  if (coverImageLocalPath) {
-    coverImage = await uploadCloudinary(coverImageLocalPath);
-    // console.log("Cloudinary upload result:", coverImage);
+  let avatar = null;
+  if (avatarLocalPath) {
+    avatar = await uploadCloudinary(avatarLocalPath);
 
-    if (!coverImage) {
+    if (!avatar) {
       throw new ApiError(500, "Failed to upload display picture in Cloudinary");
     }
   } else {
     console.warn("No display picture provided");
   }
 
-  // creating Hospital Doc. for Hospital
-  const hospital = await Hospital.create({
-    name,
-    password,
+  const doctor = await Doctor.create({
     phone,
     email,
-    location: {
-      state,
-      city,
-      zip,
-    },
-    ownership,
-    coverImage: {
-      url: coverImage?.url || "",
-      public_id: coverImage?.public_id || "",
+    password,
+    name,
+    specialization,
+    description,
+    avatar: {
+      url: avatar?.url || "",
+      public_id: avatar?.public_id || "",
     },
   });
 
@@ -87,29 +80,29 @@ const registerHospital = asyncHandler(async (req, res) => {
     );
 });
 
-const loginHospital = asyncHandler(async (req, res) => {
+const loginDoctor = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
-  if (!email && !password) {
+  if (!email || !password) {
     throw new ApiError(400, "Email and password are required");
   }
 
-  const hospital = await Hospital.findOne({ email });
+  const doctor = await Doctor.findOne({ email });
 
-  if (!hospital) {
-    throw new ApiError(404, "Hospital does not exist");
+  if (!Doctor) {
+    throw new ApiError(404, "doctor does not exist");
   }
 
-  const isValidPassword = await hospital.isPasswordCorrect(password);
+  const isValidPassword = await doctor.isPasswordCorrect(password);
 
   if (!isValidPassword) {
-    throw new ApiError(401, "Invalid Hospital credentials");
+    throw new ApiError(401, "Invalid Doctor credentials");
   }
 
   const { accessToken, refreshToken } =
-    await generateAccessTokenAndRefreshToken(Hospital, hospital._id);
+    await generateAccessTokenAndRefreshToken(Doctor, doctor._id);
 
-  const loggedInHospital = await Hospital.findById(hospital._id).select(
+  const loggedInDoctor = await Doctor.findById(doctor._id).select(
     "-password -refreshToken"
   );
 
@@ -121,17 +114,17 @@ const loginHospital = asyncHandler(async (req, res) => {
       new ApiResponse(
         200,
         {
-          Hospital: loggedInHospital,
+          Doctor: loggedInDoctor,
           accessToken,
           refreshToken,
         },
-        "Hospital logged in successfully"
+        "Doctor logged in successfully"
       )
     );
 });
 
-const logoutHospital = asyncHandler(async (req, res) => {
-  await Hospital.findByIdAndUpdate(req.user._id, {
+const logoutDoctor = asyncHandler(async (req, res) => {
+  await Doctor.findByIdAndUpdate(req.user._id, {
     $unset: {
       refreshToken: 1, // this removes the field from document
     },
@@ -141,12 +134,12 @@ const logoutHospital = asyncHandler(async (req, res) => {
     .status(200)
     .clearCookie("accessToken", options)
     .clearCookie("refreshToken", options)
-    .json(new ApiResponse(200, {}, "Hospital logged Out"));
+    .json(new ApiResponse(200, {}, "Doctor logged Out"));
 });
 
 const refreshAccessToken = asyncHandler(async (req, res) => {
   const { accessToken, refreshToken } =
-    await generateAccessTokenAndRefreshToken(Hospital, req.user._id);
+    await generateAccessTokenAndRefreshToken(Doctor, req.user._id);
 
   return res
     .status(200)
@@ -171,20 +164,20 @@ const changePassword = asyncHandler(async (req, res) => {
     );
   }
 
-  const hospital = await Hospital.findById(req.user?._id);
+  const doctor = await Doctor.findById(req.user?._id);
 
-  if (!hospital) {
-    throw new ApiError(404, "hospital not found");
+  if (!doctor) {
+    throw new ApiError(404, "doctor not found");
   }
 
-  const isValidPassword = await hospital.isPasswordCorrect(oldPassword);
+  const isValidPassword = await doctor.isPasswordCorrect(oldPassword);
 
   if (!isValidPassword) {
     throw new ApiError(400, "Invalid old password");
   }
 
-  hospital.password = newPassword;
-  await hospital.save({ validateBeforeSave: false });
+  doctor.password = newPassword;
+  await doctor.save({ validateBeforeSave: false });
 
   return res
     .status(200)
@@ -192,9 +185,9 @@ const changePassword = asyncHandler(async (req, res) => {
 });
 
 export {
-  registerHospital,
-  loginHospital,
-  logoutHospital,
+  registerDoctor,
+  loginDoctor,
+  logoutDoctor,
   refreshAccessToken,
   changePassword,
 };
