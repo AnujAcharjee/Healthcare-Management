@@ -21,6 +21,50 @@ const getPatientProfile = asyncHandler(async (req, res) => {
       },
     },
     {
+      $addFields: {
+        bedAllocated: { $arrayElemAt: ["$bedAllocated", 0] },
+      },
+    },
+    {
+      $lookup: {
+        from: "wards",
+        localField: "bedAllocated.ward_id",
+        foreignField: "_id",
+        as: "ward",
+      },
+    },
+    {
+      $addFields: {
+        ward: { $arrayElemAt: ["$ward", 0] },
+      },
+    },
+    {
+      $lookup: {
+        from: "departments",
+        localField: "ward.department_id",
+        foreignField: "_id",
+        as: "department",
+      },
+    },
+    {
+      $addFields: {
+        department: { $arrayElemAt: ["$department", 0] },
+      },
+    },
+    {
+      $lookup: {
+        from: "hospitals",
+        localField: "department.hospital_id",
+        foreignField: "_id",
+        as: "hospital",
+      },
+    },
+    {
+      $addFields: {
+        hospital: { $arrayElemAt: ["$hospital", 0] },
+      },
+    },
+    {
       $project: {
         userName: 1,
         email: 1,
@@ -28,17 +72,20 @@ const getPatientProfile = asyncHandler(async (req, res) => {
         avatar: 1,
         DOB: 1,
         gender: 1,
-        bedAllocated: 1,
+        bedAllocated: "$bedAllocated.bedNumber",
+        ward: "$ward.name",
+        department: "$department.name",
+        hospital: "$hospital.name",
         opdAppointments: 1,
       },
     },
   ]);
 
-  if (!user) {
+  if (!user || user.length === 0) {
     throw new ApiError(404, "User not found");
   }
 
-  return res.status(200).json(new ApiResponse(200, user));
+  return res.status(200).json(new ApiResponse(200, user[0]));
 });
 
 const changePatientProfile = asyncHandler(async (req, res) => {
@@ -73,7 +120,7 @@ const changePatientProfile = asyncHandler(async (req, res) => {
         gender,
       },
     },
-    { new: true, select: "-password -refreshToken" }
+    { new: true, select: "-password -refreshToken -avatar -opdAppointments" }
   );
 
   if (!updatedUser) {
@@ -120,7 +167,7 @@ const changePatientAvatar = asyncHandler(async (req, res) => {
         },
       },
     },
-    { new: true, select: "-password -refreshToken" }
+    { new: true, select: "-password -refreshToken -email -phoneNumber -gender -DOB -opdAppointments" }
   );
   return res
     .status(200)
@@ -137,7 +184,6 @@ const deletePatient = asyncHandler(async (req, res) => {
   }
 
   const user = await Patient.findById(req.user?._id);
-
   if (!user) {
     throw new ApiError(404, "User not found");
   }
@@ -147,40 +193,32 @@ const deletePatient = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Invalid password");
   }
 
-  // delete avatar from cloudinary
+  // Delete avatar from cloudinary
   if (user.avatar?.public_id) {
     const deletedAvatar = await deleteCloudinary(user.avatar?.public_id);
 
     if (!deletedAvatar) {
       throw new ApiError(500, "Error deleting avatar from Cloudinary");
     }
-    // console.log("avatar deleted");
   }
 
-  // Find the user's medical records
-  const medicalRecords = await MedicalRecord.findOne({
+  // Find and delete medical records
+  const medicalRecords = await MedicalRecord.findOneAndDelete({
     patientId: user._id,
   });
-  // console.log("found medical records");
 
   // Delete medical record files from cloudinary
   if (medicalRecords) {
     await deleteArrayElements(medicalRecords.labTestReports);
-    console.log("deleted labtest reports");
     await deleteArrayElements(medicalRecords.otherReports);
-    console.log("deleted other reports");
   }
-  // console.log("came after medical reports cloud delete");
 
-  await Patient.findByIdAndDelete(user._id); // Delete profile from DB
-  // console.log("Patient deleted");
-
-  await MedicalRecord.findByIdAndDelete(medicalRecords._id); //Delete medical records from DB
-  // console.log("medical records deleted");
+  // Delete patient profile
+  await Patient.findByIdAndDelete(user._id);
 
   return res
-    .status(200)
-    .json(new ApiResponse(200, user.userName, "User deletion successful"));
+    .status(204)
+    .json(new ApiResponse(204, user.userName, "User deletion successful"));
 });
 
 export {

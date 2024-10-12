@@ -3,7 +3,7 @@ import asyncHandler from "../../utils/asyncHandler.js";
 import ApiError from "../../utils/ApiError.js";
 import ApiResponse from "../../utils/ApiResponse.js";
 import { Department } from "../../models/department.model.js";
-import { Ward } from "../../models/ward.collection.js";
+import { Ward } from "../../models/ward.model.js";
 import { Allocated_bed } from "../../models/allocatedBed.model.js";
 import { Patient } from "../../models/patient.model.js";
 
@@ -243,24 +243,3 @@ export {
   getAllocatedBedsInfo,
   deleteAllocatedBed,
 };
-
-// const getAllDepartments = asyncHandler(async (req, res) => {
-//   const departments = await Department.aggregate([
-//     {
-//       $match: { hospital_id: req.user?._id },
-//     },
-//     {
-//       $project: { name: 1 },
-//     },
-//   ]);
-
-//   if (!departments?.length) {
-//     throw new ApiError(400, "Department doesn't exist");
-//   }
-
-//   return res
-//     .status(200)
-//     .json(
-//       new ApiResponse(200, departments, "Departments fetched successfully")
-//     );
-// });

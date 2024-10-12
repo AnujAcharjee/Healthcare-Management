@@ -7,7 +7,7 @@ import {
 } from "./authentication.controller.js";
 
 import {
-  hospitalProfile,
+  getHospitalProfile,
   changeHospitalProfile,
   changeCoverImage,
   deleteHospital,
@@ -29,7 +29,7 @@ export {
   logoutHospital,
   refreshAccessToken,
   changePassword,
-  hospitalProfile,
+  getHospitalProfile,
   changeCoverImage,
   changeHospitalProfile,
   deleteHospital,

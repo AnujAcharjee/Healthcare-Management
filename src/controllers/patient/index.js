@@ -13,10 +13,10 @@ import {
   deletePatient,
 } from "./profile.controller.js";
 
-import { 
-    uploadOtherReports,
-    uploadLabTestReports, 
-
+import {
+  uploadOtherReports,
+  uploadLabTestReports,
+  getAllMedicalReports,
 } from "./medicalRecords.controller.js";
 
 export {
@@ -31,4 +31,5 @@ export {
   deletePatient,
   uploadOtherReports,
   uploadLabTestReports,
+  getAllMedicalReports,
 };

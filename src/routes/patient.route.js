@@ -11,6 +11,7 @@ import {
   deletePatient,
   uploadOtherReports,
   uploadLabTestReports,
+  getAllMedicalReports,
 } from "../controllers/Patient/index.js";
 
 import { upload } from "../middlewares/multer.middleware.js";
@@ -26,15 +27,17 @@ router.route("/refresh-token").post(verifyJwt, refreshAccessToken);
 router.route("/reset-password").post(verifyJwt, changePassword);
 
 // patient profile
-router.route("/profile").get(verifyJwt, getPatientProfile);
-router.route("/profile/update").patch(verifyJwt, changePatientProfile);
+router
+  .route("/profile")
+  .get(verifyJwt, getPatientProfile)
+  .delete(verifyJwt, deletePatient)
+  .patch(verifyJwt, changePatientProfile);
 router
   .route("/profile/update/avatar")
   .patch(verifyJwt, upload.single("avatar"), changePatientAvatar);
-router.route("/profile/delete").delete(verifyJwt, deletePatient);
 
 // patient medical records
-uploadOtherReports;
+router.route("/medical-records").get(verifyJwt, getAllMedicalReports);
 router
   .route("/medical-records/other-reports")
   .post(verifyJwt, upload.single("medicalReport"), uploadOtherReports);

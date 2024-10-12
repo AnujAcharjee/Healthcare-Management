@@ -6,7 +6,7 @@ import {
   logoutHospital,
   refreshAccessToken,
   changePassword,
-  hospitalProfile,
+  getHospitalProfile,
   changeCoverImage,
   changeHospitalProfile,
   deleteHospital,
@@ -34,9 +34,10 @@ router.route("/reset-password").post(verifyJwt, changePassword);
 // Profile
 router
   .route("/profile")
-  .get(verifyJwt, hospitalProfile)
-  .delete(verifyJwt, deleteHospital)
-  .patch(verifyJwt, changeHospitalProfile);
+  .get(verifyJwt, getHospitalProfile)
+  .patch(verifyJwt, changeHospitalProfile)
+  // .delete(verifyJwt, deleteHospital);
+
 router
   .route("/profile/cover-image")
   .patch(verifyJwt, upload.single("coverImage"), changeCoverImage);

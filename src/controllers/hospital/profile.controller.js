@@ -8,7 +8,7 @@ import {
   deleteArrayElements,
 } from "../../utils/cloudinary.js";
 
-const hospitalProfile = asyncHandler(async (req, res) => {
+const getHospitalProfile = asyncHandler(async (req, res) => {
   const user = await Hospital.aggregate([
     { $match: { _id: req.user?._id } },
     {
@@ -27,7 +27,7 @@ const hospitalProfile = asyncHandler(async (req, res) => {
         location: 1,
         ownership: 1,
         coverImage: 1,
-        departments:  "$departments.name" ,
+        departments: "$departments.name",
       },
     },
   ]);
@@ -36,7 +36,11 @@ const hospitalProfile = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Hospital not found");
   }
 
-  return res.status(200).json(new ApiResponse(200, user, "Hospital profile retrieved successfully."));
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, user, "Hospital profile retrieved successfully.")
+    );
 });
 
 const changeHospitalProfile = asyncHandler(async (req, res) => {
@@ -76,7 +80,7 @@ const changeHospitalProfile = asyncHandler(async (req, res) => {
         ownership,
       },
     },
-    { new: true, select: "-password -refreshToken" }
+    { new: true, select: "-password -refreshToken -coverImage" }
   );
 
   if (!updatedUser) {
@@ -125,7 +129,7 @@ const changeCoverImage = asyncHandler(async (req, res) => {
         },
       },
     },
-    { new: true, select: "-password -refreshToken" }
+    { new: true, select: "-password -refreshToken -location -email -phone -ownership" }
   );
   return res
     .status(200)
@@ -174,12 +178,12 @@ const deleteHospital = asyncHandler(async (req, res) => {
   await Hospital.findByIdAndDelete(user._id); // delete profile from DB
 
   return res
-    .status(200)
-    .json(new ApiResponse(200, user.name, "Hospital deletion successful"));
+    .status(204)
+    .json(new ApiResponse(204, user.name, "Hospital deletion successful"));
 });
 
 export {
-  hospitalProfile,
+  getHospitalProfile,
   changeHospitalProfile,
   changeCoverImage,
   deleteHospital,

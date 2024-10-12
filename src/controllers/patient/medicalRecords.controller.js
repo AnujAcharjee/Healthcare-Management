@@ -93,4 +93,20 @@ const uploadOtherReports = asyncHandler(async (req, res) => {
     );
 });
 
-export { uploadOtherReports, uploadLabTestReports };
+const getAllMedicalReports = asyncHandler(async (req, res) => {
+  const medicalReports = await MedicalRecord.findOne({
+    patientId: req.user?._id,
+  }).select("-patientId");
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        medicalReports,
+        "Medical Reports fetched successfully"
+      )
+    );
+});
+
+export { uploadOtherReports, uploadLabTestReports, getAllMedicalReports };
