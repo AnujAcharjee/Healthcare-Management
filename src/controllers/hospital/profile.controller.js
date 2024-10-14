@@ -55,6 +55,14 @@ const changeHospitalProfile = asyncHandler(async (req, res) => {
     throw new ApiError(400, "All fields are required");
   }
 
+  // Validate email and phone format (basic example)
+  if (!/^\S+@\S+\.\S+$/.test(email)) {
+    throw new ApiError(400, "Invalid email format");
+  }
+  if (!/^\d{10}$/.test(phone)) {
+    throw new ApiError(400, "Phone number must be 10 digits");
+  }
+
   const user = await Hospital.findById(req.user?._id);
   if (!user) {
     throw new ApiError(404, "User not found");
@@ -129,7 +137,10 @@ const changeCoverImage = asyncHandler(async (req, res) => {
         },
       },
     },
-    { new: true, select: "-password -refreshToken -location -email -phone -ownership" }
+    {
+      new: true,
+      select: "-password -refreshToken -location -email -phone -ownership",
+    }
   );
   return res
     .status(200)

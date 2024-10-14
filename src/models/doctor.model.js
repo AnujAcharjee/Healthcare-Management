@@ -1,4 +1,10 @@
 import mongoose, { Schema } from "mongoose";
+import {
+  hashPassword,
+  isPasswordCorrect,
+  generateAccessToken,
+  generateRefreshToken,
+} from "../utils/auth.js";
 
 const doctorSchema = new Schema({
   email: {
@@ -43,5 +49,12 @@ const doctorSchema = new Schema({
     default: "Doctor",
   },
 });
+
+doctorSchema.pre("save", hashPassword);
+
+// Add methods to the schema
+doctorSchema.methods.isPasswordCorrect = isPasswordCorrect;
+doctorSchema.methods.generateAccessToken = generateAccessToken;
+doctorSchema.methods.generateRefreshToken = generateRefreshToken;
 
 export const Doctor = mongoose.model("Doctor", doctorSchema);

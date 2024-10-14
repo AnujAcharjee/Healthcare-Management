@@ -14,9 +14,6 @@ const options = {
 };
 
 const registerPatient = asyncHandler(async (req, res) => {
-  // console.log("Request body:", req.body);
-  // console.log("Uploaded files:", req.files);
-
   const { userName, email, phoneNumber, password, DOB, gender } = req.body;
 
   if (
@@ -25,6 +22,14 @@ const registerPatient = asyncHandler(async (req, res) => {
     )
   ) {
     throw new ApiError(400, "All fields are required");
+  }
+
+  // Validate email and phone format (basic example)
+  if (!/^\S+@\S+\.\S+$/.test(email)) {
+    throw new ApiError(400, "Invalid email format");
+  }
+  if (!/^\d{10}$/.test(phoneNumber)) {
+    throw new ApiError(400, "Phone number must be 10 digits");
   }
 
   const isExistingUser = await Patient.findOne({
@@ -36,12 +41,10 @@ const registerPatient = asyncHandler(async (req, res) => {
   }
 
   const avatarLocalPath = req.file?.path;
-  // console.log(avatarLocalPath);
 
   let avatar = null;
   if (avatarLocalPath) {
     avatar = await uploadCloudinary(avatarLocalPath);
-    // console.log("Cloudinary upload result:", avatar);
 
     if (!avatar) {
       throw new ApiError(500, "Failed to upload display picture in Cloudinary");
@@ -101,6 +104,11 @@ const loginPatient = asyncHandler(async (req, res) => {
 
   if (!email || !password) {
     throw new ApiError(400, "Email and password are required");
+  }
+
+  // Validate email format (basic example)
+  if (!/^\S+@\S+\.\S+$/.test(email)) {
+    throw new ApiError(400, "Invalid email format");
   }
 
   const user = await Patient.findOne({ email });

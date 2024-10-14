@@ -13,36 +13,64 @@ const options = {
 };
 
 const registerDoctor = asyncHandler(async (req, res) => {
-  const { name, password, specialization, description, phone, email } =
-    req.body;
+  const {
+    name,
+    password,
+    specialization,
+    description,
+    phone,
+    email,
+    hospitalEmail,
+  } = req.body;
 
   if (
-    [name, password, specialization, description, phone, email].some(
-      (field) => !field || field?.trim() === ""
-    )
+    [
+      name,
+      password,
+      specialization,
+      description,
+      phone,
+      email,
+      hospitalEmail,
+    ].some((field) => !field || field.trim() === "")
   ) {
     throw new ApiError(400, "All fields are required");
   }
 
-  const isExistingDoctor = await Doctor.findOne({
-    $or: [{ email }, { phone }],
-  });
+  // Validate email and phone format (basic example)
+  if (!/^\S+@\S+\.\S+$/.test(email)) {
+    throw new ApiError(400, "Invalid email format");
+  }
+  if (!/^\d{10}$/.test(phone)) {
+    throw new ApiError(400, "Phone number must be 10 digits");
+  }
 
+  const isExistingDoctor = await Doctor.findOne({ email });
   if (isExistingDoctor) {
-    throw new ApiError(409, "Email or Phone number already exists");
+    throw new ApiError(409, "Email already exists");
   }
 
   const avatarLocalPath = req.file?.path;
-
   let avatar = null;
-  if (avatarLocalPath) {
-    avatar = await uploadCloudinary(avatarLocalPath);
 
-    if (!avatar) {
-      throw new ApiError(500, "Failed to upload display picture in Cloudinary");
+  if (avatarLocalPath) {
+    try {
+      avatar = await uploadCloudinary(avatarLocalPath);
+      if (!avatar) {
+        throw new ApiError(500, "Failed to upload avatar to Cloudinary");
+      }
+    } catch (error) {
+      console.error("Cloudinary upload error:", error);
+      throw new ApiError(500, "Error uploading avatar");
     }
   } else {
-    console.warn("No display picture provided");
+    console.warn("No avatar provided");
+  }
+
+  // Find hospital by email
+  const hospital = await Hospital.findOne({ email: hospitalEmail });
+  if (!hospital) {
+    throw new ApiError(404, "Invalid hospital email");
   }
 
   const doctor = await Doctor.create({
@@ -56,17 +84,15 @@ const registerDoctor = asyncHandler(async (req, res) => {
       url: avatar?.url || "",
       public_id: avatar?.public_id || "",
     },
+    hospitalId: hospital._id,
   });
 
-  const createdHospital = await Hospital.findById(hospital._id).select(
+  const createdDoctor = await Doctor.findById(doctor._id).select(
     "-password -refreshToken"
   );
 
-  if (!createdHospital) {
-    throw new ApiError(
-      500,
-      "Something went wrong while registering the Hospital"
-    );
+  if (!createdDoctor) {
+    throw new ApiError(500, "Error while registering the doctor");
   }
 
   return res
@@ -74,8 +100,8 @@ const registerDoctor = asyncHandler(async (req, res) => {
     .json(
       new ApiResponse(
         201,
-        { Hospital: createdHospital },
-        "Hospital registered Successfully"
+        { doctor: createdDoctor },
+        "Doctor registered successfully"
       )
     );
 });
@@ -87,16 +113,21 @@ const loginDoctor = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Email and password are required");
   }
 
+  // Validate email format (basic example)
+  if (!/^\S+@\S+\.\S+$/.test(email)) {
+    throw new ApiError(400, "Invalid email format");
+  }
+
   const doctor = await Doctor.findOne({ email });
 
-  if (!Doctor) {
+  if (!doctor) {
     throw new ApiError(404, "doctor does not exist");
   }
 
   const isValidPassword = await doctor.isPasswordCorrect(password);
 
   if (!isValidPassword) {
-    throw new ApiError(401, "Invalid Doctor credentials");
+    throw new ApiError(401, "Invalid login credentials");
   }
 
   const { accessToken, refreshToken } =
@@ -126,7 +157,7 @@ const loginDoctor = asyncHandler(async (req, res) => {
 const logoutDoctor = asyncHandler(async (req, res) => {
   await Doctor.findByIdAndUpdate(req.user._id, {
     $unset: {
-      refreshToken: 1, // this removes the field from document
+      refreshToken: 1, 
     },
   });
 
@@ -167,13 +198,13 @@ const changePassword = asyncHandler(async (req, res) => {
   const doctor = await Doctor.findById(req.user?._id);
 
   if (!doctor) {
-    throw new ApiError(404, "doctor not found");
+    throw new ApiError(404, "Doctor not found");
   }
 
   const isValidPassword = await doctor.isPasswordCorrect(oldPassword);
 
   if (!isValidPassword) {
-    throw new ApiError(400, "Invalid old password");
+    throw new ApiError(401, "Invalid old password");
   }
 
   doctor.password = newPassword;

@@ -18,9 +18,11 @@ app.use(cookieParser());
 //import Routes
 import patientRouter from "./routes/patient.route.js";
 import hospitalRouter from "./routes/hospital.route.js";
+import doctorRouter from "./routes/doctor.route.js";
 
 // routes declaration
 app.use("/api/v1/patients", patientRouter);
 app.use("/api/v1/hospitals", hospitalRouter);
+app.use("/api/v1/doctors", doctorRouter);
 
 export { app };

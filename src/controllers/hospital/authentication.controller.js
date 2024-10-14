@@ -24,6 +24,14 @@ const registerHospital = asyncHandler(async (req, res) => {
     throw new ApiError(400, "All fields are required");
   }
 
+  // Validate email and phone format (basic example)
+  if (!/^\S+@\S+\.\S+$/.test(email)) {
+    throw new ApiError(400, "Invalid email format");
+  }
+  if (!/^\d{10}$/.test(phone)) {
+    throw new ApiError(400, "Phone number must be 10 digits");
+  }
+
   const isExistingHospital = await Hospital.findOne({
     $or: [{ email }, { phone }],
   });
@@ -92,6 +100,11 @@ const loginHospital = asyncHandler(async (req, res) => {
 
   if (!email && !password) {
     throw new ApiError(400, "Email and password are required");
+  }
+
+  // Validate email format (basic example)
+  if (!/^\S+@\S+\.\S+$/.test(email)) {
+    throw new ApiError(400, "Invalid email format");
   }
 
   const hospital = await Hospital.findOne({ email });

@@ -99,6 +99,14 @@ const changePatientProfile = asyncHandler(async (req, res) => {
     throw new ApiError(400, "All fields are required");
   }
 
+  // Validate email and phone format (basic example)
+  if (!/^\S+@\S+\.\S+$/.test(email)) {
+    throw new ApiError(400, "Invalid email format");
+  }
+  if (!/^\d{10}$/.test(phone)) {
+    throw new ApiError(400, "Phone number must be 10 digits");
+  }
+
   const user = await Patient.findById(req.user?._id);
   if (!user) {
     throw new ApiError(404, "User not found");
@@ -167,7 +175,11 @@ const changePatientAvatar = asyncHandler(async (req, res) => {
         },
       },
     },
-    { new: true, select: "-password -refreshToken -email -phoneNumber -gender -DOB -opdAppointments" }
+    {
+      new: true,
+      select:
+        "-password -refreshToken -email -phoneNumber -gender -DOB -opdAppointments",
+    }
   );
   return res
     .status(200)
