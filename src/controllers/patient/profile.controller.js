@@ -68,7 +68,7 @@ const getPatientProfile = asyncHandler(async (req, res) => {
       $project: {
         userName: 1,
         email: 1,
-        phoneNumber: 1,
+        phone: 1,
         avatar: 1,
         DOB: 1,
         gender: 1,
@@ -89,15 +89,7 @@ const getPatientProfile = asyncHandler(async (req, res) => {
 });
 
 const changePatientProfile = asyncHandler(async (req, res) => {
-  const { userName, email, phoneNumber, DOB, gender, password } = req.body;
-
-  if (
-    [userName, email, phoneNumber, DOB, gender, password].some(
-      (field) => field === undefined || field?.trim() === ""
-    )
-  ) {
-    throw new ApiError(400, "All fields are required");
-  }
+  const { userName, email, phone, DOB, gender } = req.body;
 
   // Validate email and phone format (basic example)
   if (!/^\S+@\S+\.\S+$/.test(email)) {
@@ -112,9 +104,13 @@ const changePatientProfile = asyncHandler(async (req, res) => {
     throw new ApiError(404, "User not found");
   }
 
-  const isValidPassword = await user.isPasswordCorrect(password);
-  if (!isValidPassword) {
-    throw new ApiError(400, "Invalid password");
+  // Checking if email is already in use, but allow the current user to keep their email
+  const isExistingEmail = await Patient.findOne({
+    email,
+    _id: { $ne: user._id },
+  });
+  if (isExistingEmail) {
+    throw new ApiError(409, "Email already exists");
   }
 
   const updatedUser = await Patient.findByIdAndUpdate(
@@ -123,7 +119,7 @@ const changePatientProfile = asyncHandler(async (req, res) => {
       $set: {
         userName,
         email,
-        phoneNumber,
+        phone,
         DOB,
         gender,
       },
@@ -178,7 +174,7 @@ const changePatientAvatar = asyncHandler(async (req, res) => {
     {
       new: true,
       select:
-        "-password -refreshToken -email -phoneNumber -gender -DOB -opdAppointments",
+        "-password -refreshToken -email -phone -gender -DOB -opdAppointments",
     }
   );
   return res
@@ -223,6 +219,8 @@ const deletePatient = asyncHandler(async (req, res) => {
   if (medicalRecords) {
     await deleteArrayElements(medicalRecords.labTestReports);
     await deleteArrayElements(medicalRecords.otherReports);
+  } else {
+    console.log("No medical records found for this patient.");
   }
 
   // Delete patient profile
@@ -230,7 +228,7 @@ const deletePatient = asyncHandler(async (req, res) => {
 
   return res
     .status(204)
-    .json(new ApiResponse(204, user.userName, "User deletion successful"));
+    .json(new ApiResponse(204, {}, "User deletion successful"));
 });
 
 export {

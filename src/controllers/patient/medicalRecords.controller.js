@@ -26,24 +26,31 @@ const uploadLabTestReports = asyncHandler(async (req, res) => {
   const updatedMedicalRecord = await MedicalRecord.findOneAndUpdate(
     { patientId: req.user?._id },
     {
-      labTestReports: {
-        labName,
-        testType,
-        description,
-        uploadedFile: {
-          url: fileCloudUpload.url,
-          public_id: fileCloudUpload.public_id,
+      $push: {
+        labTestReports: {
+          labName,
+          testType,
+          description,
+          uploadedFile: {
+            url: fileCloudUpload.url,
+            public_id: fileCloudUpload.public_id,
+          },
         },
       },
-    }
+    },
+    { new: true }
   );
+
+  if (!updatedMedicalRecord) {
+    throw new ApiError(404, "Medical record not found");
+  }
 
   return res
     .status(200)
     .json(
       new ApiResponse(
         200,
-        updatedMedicalRecord,
+        updatedMedicalRecord.labTestReports,
         "Report successfully uploaded to Cloudinary"
       )
     );
@@ -71,23 +78,30 @@ const uploadOtherReports = asyncHandler(async (req, res) => {
   const updatedMedicalRecord = await MedicalRecord.findOneAndUpdate(
     { patientId: req.user?._id },
     {
-      otherReports: {
-        title,
-        description,
-        uploadedFile: {
-          url: fileCloudUpload.url,
-          public_id: fileCloudUpload.public_id,
+      $push: {
+        otherReports: {
+          title,
+          description,
+          uploadedFile: {
+            url: fileCloudUpload.url,
+            public_id: fileCloudUpload.public_id,
+          },
         },
       },
-    }
+    },
+    { new: true }
   );
+
+  if (!updatedMedicalRecord) {
+    throw new ApiError(404, "Medical record not found");
+  }
 
   return res
     .status(200)
     .json(
       new ApiResponse(
         200,
-        updatedMedicalRecord,
+        updatedMedicalRecord.otherReports,
         "Report successfully uploaded to Cloudinary"
       )
     );
@@ -96,7 +110,11 @@ const uploadOtherReports = asyncHandler(async (req, res) => {
 const getAllMedicalReports = asyncHandler(async (req, res) => {
   const medicalReports = await MedicalRecord.findOne({
     patientId: req.user?._id,
-  }).select("-patientId");
+  });
+
+  if(!medicalReports){
+    throw new ApiError(404, "Medical record not found");
+  }
 
   return res
     .status(200)

@@ -15,7 +15,7 @@ import {
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJwt } from "../middlewares/auth.middleware.js";
 
-const router = Router;
+const router = Router();
 
 // authentication
 router.route("/register").post(upload.single("avatar"), registerDoctor);
@@ -28,8 +28,10 @@ router.route("/reset-password").post(verifyJwt, changePassword);
 router
   .route("/profile")
   .get(verifyJwt, getDoctorProfile)
-  .delete(verifyJwt, deleteDoctor)
-  .patch(verifyJwt, changeDoctorProfile);
+  .patch(verifyJwt, changeDoctorProfile)
+  .delete(verifyJwt, deleteDoctor);
 router
   .route("/profile/update/avatar")
   .patch(verifyJwt, upload.single("avatar"), changeDoctorAvatar);
+
+export default router;

@@ -2,6 +2,7 @@ import asyncHandler from "../../utils/asyncHandler.js";
 import ApiError from "../../utils/ApiError.js";
 import ApiResponse from "../../utils/ApiResponse.js";
 import { Doctor } from "../../models/doctor.model.js";
+import { Hospital } from "../../models/hospital.model.js";
 import { generateAccessTokenAndRefreshToken } from "../../utils/auth.js";
 import { uploadCloudinary } from "../../utils/cloudinary.js";
 
@@ -51,6 +52,7 @@ const registerDoctor = asyncHandler(async (req, res) => {
   }
 
   const avatarLocalPath = req.file?.path;
+
   let avatar = null;
 
   if (avatarLocalPath) {
@@ -157,7 +159,7 @@ const loginDoctor = asyncHandler(async (req, res) => {
 const logoutDoctor = asyncHandler(async (req, res) => {
   await Doctor.findByIdAndUpdate(req.user._id, {
     $unset: {
-      refreshToken: 1, 
+      refreshToken: 1,
     },
   });
 

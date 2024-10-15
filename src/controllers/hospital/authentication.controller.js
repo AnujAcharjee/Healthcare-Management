@@ -35,18 +35,15 @@ const registerHospital = asyncHandler(async (req, res) => {
   const isExistingHospital = await Hospital.findOne({
     $or: [{ email }, { phone }],
   });
-
   if (isExistingHospital) {
     throw new ApiError(409, "Email or Phone number already exists");
   }
 
   const coverImageLocalPath = req.file?.path;
-  // console.log(coverImageLocalPath);
 
   let coverImage = null;
   if (coverImageLocalPath) {
     coverImage = await uploadCloudinary(coverImageLocalPath);
-    // console.log("Cloudinary upload result:", coverImage);
 
     if (!coverImage) {
       throw new ApiError(500, "Failed to upload display picture in Cloudinary");

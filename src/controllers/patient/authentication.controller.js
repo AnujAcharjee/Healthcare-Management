@@ -14,10 +14,10 @@ const options = {
 };
 
 const registerPatient = asyncHandler(async (req, res) => {
-  const { userName, email, phoneNumber, password, DOB, gender } = req.body;
+  const { userName, email, phone, password, DOB, gender } = req.body;
 
   if (
-    [userName, email, password, phoneNumber, DOB, gender].some(
+    [userName, email, password, phone, DOB, gender].some(
       (field) => !field || field?.trim() === ""
     )
   ) {
@@ -28,12 +28,12 @@ const registerPatient = asyncHandler(async (req, res) => {
   if (!/^\S+@\S+\.\S+$/.test(email)) {
     throw new ApiError(400, "Invalid email format");
   }
-  if (!/^\d{10}$/.test(phoneNumber)) {
+  if (!/^\d{10}$/.test(phone)) {
     throw new ApiError(400, "Phone number must be 10 digits");
   }
 
   const isExistingUser = await Patient.findOne({
-    $or: [{ email }, { phoneNumber }],
+    $or: [{ email }, { phone }],
   });
 
   if (isExistingUser) {
@@ -57,7 +57,7 @@ const registerPatient = asyncHandler(async (req, res) => {
   const user = await Patient.create({
     userName,
     email,
-    phoneNumber,
+    phone,
     password,
     DOB,
     gender,
