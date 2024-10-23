@@ -112,7 +112,7 @@ const getAllMedicalReports = asyncHandler(async (req, res) => {
     patientId: req.user?._id,
   });
 
-  if(!medicalReports){
+  if (!medicalReports) {
     throw new ApiError(404, "Medical record not found");
   }
 

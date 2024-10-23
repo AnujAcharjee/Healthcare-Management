@@ -13,6 +13,15 @@ import {
   deleteDoctor,
 } from "./profile.controller.js";
 
+import {
+  createPrescription,
+  prescribeMedicines,
+  changePrescription,
+  changePrescribedMedicine,
+  deletePrescribedMedicine,
+  deletePrescription,
+} from "./prescription.controller.js";
+
 export {
   registerDoctor,
   loginDoctor,
@@ -23,4 +32,10 @@ export {
   changeDoctorAvatar,
   changeDoctorProfile,
   deleteDoctor,
+  createPrescription,
+  prescribeMedicines,
+  changePrescription,
+  changePrescribedMedicine,
+  deletePrescribedMedicine,
+  deletePrescription,
 };

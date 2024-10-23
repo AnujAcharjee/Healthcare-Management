@@ -10,6 +10,12 @@ import {
   changeDoctorAvatar,
   changeDoctorProfile,
   deleteDoctor,
+  createPrescription,
+  prescribeMedicines,
+  changePrescription,
+  changePrescribedMedicine,
+  deletePrescribedMedicine,
+  deletePrescription,
 } from "../controllers/Doctor/index.js";
 
 import { upload } from "../middlewares/multer.middleware.js";
@@ -24,7 +30,7 @@ router.route("/logout").post(verifyJwt, logoutDoctor);
 router.route("/refresh-token").post(verifyJwt, refreshAccessToken);
 router.route("/reset-password").post(verifyJwt, changePassword);
 
-// patient profile
+// profile
 router
   .route("/profile")
   .get(verifyJwt, getDoctorProfile)
@@ -33,5 +39,24 @@ router
 router
   .route("/profile/update/avatar")
   .patch(verifyJwt, upload.single("avatar"), changeDoctorAvatar);
+
+// prescription
+router.route("/prescription").post(verifyJwt, createPrescription);
+router
+  .route("/medical-records/:medicalRecords_id/prescription/:prescription_id")
+  .patch(verifyJwt, changePrescription)
+  .delete(verifyJwt, deletePrescription);
+
+router
+  .route(
+    "/medical-records/:medicalRecords_id/prescription/:prescription_id/medicine"
+  )
+  .post(verifyJwt, prescribeMedicines);
+router
+  .route(
+    "/medical-records/:medicalRecords_id/prescription/:prescription_id/medicine/:medicine_id"
+  )
+  .patch(verifyJwt, changePrescribedMedicine)
+  .delete(verifyJwt, deletePrescribedMedicine);
 
 export default router;

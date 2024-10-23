@@ -17,13 +17,21 @@ const prescriptionSchema = new mongoose.Schema(
     },
     medicinesPrescribed: [
       {
-        medicineId: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Inventory",
+        name: {
+          type: String,
+          required: true,
         },
         dosage: {
           type: String,
+          required: true,
         },
+        frequency: {
+          type: String,
+          required: true,
+        },
+        instructions: {
+          type: String,
+        }
       },
     ],
   },
