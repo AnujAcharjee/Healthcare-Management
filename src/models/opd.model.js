@@ -1,7 +1,17 @@
 import mongoose, { Schema } from "mongoose";
 
 const OPDSchema = new Schema({
-  type: {
+  hospitalId: {
+    type: Schema.Types.ObjectId,
+    ref: "Hospital",
+    required: true,
+  },
+  doctorId: {
+    type: Schema.Types.ObjectId,
+    ref: "Doctor",
+    required: true,
+  },
+  department: {
     type: String,
     required: true,
   },
@@ -9,11 +19,11 @@ const OPDSchema = new Schema({
     type: String,
     required: true,
   },
-  appointmentDate: {
+  date: {
     type: Date,
     required: true,
   },
-  duration: {
+  time: {
     type: String,
     required: true,
   },
@@ -22,16 +32,7 @@ const OPDSchema = new Schema({
     enum: ["Scheduled", "Completed", "Cancelled"],
     default: "Scheduled",
   },
-  doctorId: {
-    type: Schema.Types.ObjectId,
-    ref: "Doctor",
-    required: true,
-  },
-  hospitalId: {
-    type: Schema.Types.ObjectId,
-    ref: "Hospital",
-    required: true,
-  },
+
   appointedPatients: [
     {
       type: Schema.Types.ObjectId,
